@@ -6,7 +6,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import DetailView, ListView
 
 from .forms import AccessoryForm, AccessorySearchForm
-from .models import Accessory
+from .models import Accessory, AccessoryFavorite
 
 
 class AccessoryListView(ListView):
@@ -98,5 +98,46 @@ def delete_accessory(request, pk):
 def my_accessories(request):
     accessories = Accessory.objects.filter(seller=request.user).order_by('-created_at')
     return render(request, 'accessories/my_accessories.html', {'accessories': accessories})
+
+
+@login_required
+def toggle_accessory_favorite(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+
+    accessory = get_object_or_404(Accessory, pk=pk)
+
+    # Prevent sellers from favoriting accessories
+    if request.user.is_seller:
+        return JsonResponse({
+            'error': 'Sellers cannot favorite accessories. Only buyers can add favorites.',
+            'is_favorited': False
+        }, status=400)
+
+    # Prevent users from favoriting their own accessories
+    if request.user == accessory.seller:
+        return JsonResponse({
+            'error': 'You cannot favorite your own accessory.',
+            'is_favorited': False
+        }, status=400)
+
+    favorite, created = AccessoryFavorite.objects.get_or_create(
+        user=request.user,
+        accessory=accessory
+    )
+
+    if not created:
+        favorite.delete()
+        is_favorited = False
+        message = 'Removed from favorites'
+    else:
+        is_favorited = True
+        message = 'Added to favorites'
+
+    return JsonResponse({
+        'is_favorited': is_favorited,
+        'message': message,
+        'favorites_count': accessory.favorited_by.count()
+    })
 
 

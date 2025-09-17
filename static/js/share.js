@@ -272,3 +272,44 @@ function copyToClipboard(elementId) {
 
 // Initialize the share functionality
 const dogShare = new DogShare();
+
+// Lightweight helper for POST with CSRF
+function getCookie(name) {
+    var value = '; ' + document.cookie;
+    var parts = value.split('; ' + name + '=');
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+function postJSON(url) {
+    return fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        credentials: 'same-origin'
+    }).then(function(res){ return res.json(); });
+}
+
+function bindAccessoryFavoriteToggles(){
+    var buttons = document.querySelectorAll('.js-acc-fav-toggle');
+    buttons.forEach(function(btn){
+        btn.addEventListener('click', function(e){
+            e.preventDefault();
+            var url = btn.getAttribute('data-fav-url');
+            if (!url) return;
+            postJSON(url).then(function(data){
+                if (data && typeof data.is_favorited !== 'undefined'){
+                    btn.classList.toggle('bg-red-100', data.is_favorited);
+                    btn.classList.toggle('text-red-600', data.is_favorited);
+                }
+            }).catch(function(){ /* ignore */ });
+        });
+    });
+}
+
+if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', bindAccessoryFavoriteToggles);
+} else {
+    bindAccessoryFavoriteToggles();
+}
