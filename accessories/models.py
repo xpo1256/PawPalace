@@ -101,3 +101,18 @@ class Accessory(models.Model):
     def is_seller(self):
         """Check if the current user is the seller"""
         return self.seller.role == 'seller'
+
+
+class AccessoryFavorite(models.Model):
+    """Model for users to save favorite accessories"""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='accessory_favorites')
+    accessory = models.ForeignKey(Accessory, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'accessory')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.accessory.name}"
