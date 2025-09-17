@@ -2,6 +2,8 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db import transaction
+from django.conf import settings
+from pathlib import Path
 from decimal import Decimal
 import requests
 
@@ -162,7 +164,13 @@ class Command(BaseCommand):
                 file_name = f"{data['name'].lower().replace(' ', '_')}.jpg"
                 accessory.image.save(file_name, ContentFile(resp.content), save=False)
             except Exception:
-                accessory.image.save('placeholder.jpg', ContentFile(b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02L\x01\x00;'), save=False)
+                # Use a local placeholder file if remote fetch fails
+                placeholder_path = Path(settings.MEDIA_ROOT) / 'accessories' / 'placeholder.jpg'
+                try:
+                    with open(placeholder_path, 'rb') as ph:
+                        accessory.image.save('placeholder.jpg', ContentFile(ph.read()), save=False)
+                except Exception:
+                    accessory.image.save('placeholder.jpg', ContentFile(b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02L\x01\x00;'), save=False)
 
             accessory.save()
             created_count += 1
