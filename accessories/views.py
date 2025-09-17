@@ -177,28 +177,38 @@ def favorite_accessories(request):
     })
 
 
-# -------- Cart (session-based) --------
+# -------- Unified Cart (session-based) --------
 
-def _get_cart(session):
+def _get_unified_cart(session):
     cart = session.get('cart', {})
     if not isinstance(cart, dict):
         cart = {}
+    if 'accessories' not in cart or not isinstance(cart.get('accessories'), dict):
+        cart['accessories'] = {}
+    if 'dogs' not in cart or not isinstance(cart.get('dogs'), dict):
+        cart['dogs'] = {}
     return cart
 
 
 @login_required
 def cart_view(request):
-    cart = _get_cart(request.session)
-    ids = [int(_id) for _id in cart.keys()]
-    accessories = Accessory.objects.filter(id__in=ids)
+    cart = _get_unified_cart(request.session)
+    acc_map = cart.get('accessories', {})
+    dog_map = cart.get('dogs', {})
+    acc_ids = [int(_id) for _id in acc_map.keys()]
+    accessories = Accessory.objects.filter(id__in=acc_ids)
     items = []
     total = 0
     for accessory in accessories:
-        qty = int(cart.get(str(accessory.id), 1))
+        qty = int(acc_map.get(str(accessory.id), 1))
         line_total = accessory.price * qty
         total += line_total
         items.append({'accessory': accessory, 'quantity': qty, 'line_total': line_total})
-    return render(request, 'accessories/cart.html', {'items': items, 'total': total})
+    # Include dogs from unified cart
+    from dogs.models import Dog
+    dog_ids = [int(_id) for _id in dog_map.keys()]
+    dogs = Dog.objects.filter(id__in=dog_ids)
+    return render(request, 'accessories/cart.html', {'items': items, 'total': total, 'dogs': dogs})
 
 
 @login_required
@@ -206,9 +216,10 @@ def add_to_cart(request, pk):
     if request.method != 'POST':
         return redirect('accessories:list')
     accessory = get_object_or_404(Accessory, pk=pk, is_available=True)
-    cart = _get_cart(request.session)
-    current = int(cart.get(str(accessory.id), 0))
-    cart[str(accessory.id)] = min(current + 1, max(1, accessory.quantity or 1))
+    cart = _get_unified_cart(request.session)
+    acc_map = cart['accessories']
+    current = int(acc_map.get(str(accessory.id), 0))
+    acc_map[str(accessory.id)] = min(current + 1, max(1, accessory.quantity or 1))
     request.session['cart'] = cart
     messages.success(request, f'Added "{accessory.name}" to cart.')
     return redirect(request.POST.get('next') or accessory.get_absolute_url())
@@ -227,11 +238,12 @@ def update_cart(request, pk):
             qty = min(qty, int(accessory.quantity))
         except Exception:
             pass
-    cart = _get_cart(request.session)
+    cart = _get_unified_cart(request.session)
+    acc_map = cart['accessories']
     if qty == 0:
-        cart.pop(str(accessory.id), None)
+        acc_map.pop(str(accessory.id), None)
     else:
-        cart[str(accessory.id)] = qty
+        acc_map[str(accessory.id)] = qty
     request.session['cart'] = cart
     return redirect('accessories:cart')
 
@@ -239,9 +251,10 @@ def update_cart(request, pk):
 @login_required
 def remove_from_cart(request, pk):
     accessory = get_object_or_404(Accessory, pk=pk)
-    cart = _get_cart(request.session)
-    if str(accessory.id) in cart:
-        cart.pop(str(accessory.id))
+    cart = _get_unified_cart(request.session)
+    acc_map = cart['accessories']
+    if str(accessory.id) in acc_map:
+        acc_map.pop(str(accessory.id))
         request.session['cart'] = cart
         messages.info(request, f'Removed "{accessory.name}" from cart.')
     return redirect('accessories:cart')
@@ -249,20 +262,20 @@ def remove_from_cart(request, pk):
 
 @login_required
 def checkout_view(request):
-    cart = _get_cart(request.session)
-    if not cart:
+    cart = _get_unified_cart(request.session)
+    if not cart.get('accessories') and not cart.get('dogs'):
         messages.info(request, 'Your cart is empty.')
         return redirect('accessories:cart')
 
-    ids = [int(_id) for _id in cart.keys()]
-    accessories = Accessory.objects.filter(id__in=ids, is_available=True, is_approved=True).select_related('seller')
+    acc_ids = [int(_id) for _id in cart.get('accessories', {}).keys()]
+    accessories = Accessory.objects.filter(id__in=acc_ids, is_available=True, is_approved=True).select_related('seller')
 
     # Group items by seller for messaging-based checkout
     grouped = defaultdict(list)
     for accessory in accessories:
         grouped[accessory.seller].append({
             'accessory': accessory,
-            'quantity': int(cart.get(str(accessory.id), 1)),
+            'quantity': int(cart['accessories'].get(str(accessory.id), 1)),
         })
 
     if request.method == 'POST':
@@ -286,10 +299,8 @@ def checkout_view(request):
         return redirect('messaging:start_conversation', user_pk=seller_id)
 
     # Also include dogs in cart for combined view
-    from dogs.views import _get_dog_cart
     from dogs.models import Dog
-    dog_cart = _get_dog_cart(request.session)
-    dog_ids = [int(_id) for _id in dog_cart.keys()]
+    dog_ids = [int(_id) for _id in cart.get('dogs', {}).keys()]
     dogs = Dog.objects.filter(id__in=dog_ids)
 
     return render(request, 'accessories/checkout.html', {
@@ -300,13 +311,13 @@ def checkout_view(request):
 
 @login_required
 def checkout_pay(request):
-    # Create a single Stripe Checkout Session for all items (MVP)
-    cart = _get_cart(request.session)
-    if not cart:
+    # Create a single Stripe Checkout Session for all accessories (dogs are request-based)
+    cart = _get_unified_cart(request.session)
+    if not cart.get('accessories'):
         messages.info(request, 'Your cart is empty.')
         return redirect('accessories:cart')
 
-    ids = [int(_id) for _id in cart.keys()]
+    ids = [int(_id) for _id in cart.get('accessories', {}).keys()]
     accessories = Accessory.objects.filter(id__in=ids, is_available=True, is_approved=True)
 
     if not settings.STRIPE_SECRET_KEY:
@@ -318,7 +329,7 @@ def checkout_pay(request):
     line_items = []
     order_total_cents = 0
     for accessory in accessories:
-        qty = int(cart.get(str(accessory.id), 1))
+        qty = int(cart['accessories'].get(str(accessory.id), 1))
         amount_cents = int(float(accessory.price) * 100)
         order_total_cents += amount_cents * max(1, qty)
         line_items.append({
@@ -354,7 +365,7 @@ def checkout_pay(request):
         stripe_session_id=session.id,
     )
     for accessory in accessories:
-        qty = int(cart.get(str(accessory.id), 1))
+        qty = int(cart['accessories'].get(str(accessory.id), 1))
         AccessoryOrderItem.objects.create(
             order=order,
             accessory=accessory,

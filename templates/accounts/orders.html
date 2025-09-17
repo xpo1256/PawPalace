@@ -129,7 +129,18 @@
                                             {% endif %}
                                         </span>
                                     </div>
-                                    <div class="text-2xl font-bold text-gray-900">${{ order.dog.price }}</div>
+                                <div class="text-2xl font-bold text-gray-900">${{ order.dog.price }}</div>
+                                {% if order.shipment_status and order.shipment_status != 'none' %}
+                                <div class="mt-2 text-sm text-gray-600">
+                                    <div><strong>Shipping:</strong> {{ order.get_shipment_status_display }}</div>
+                                    {% if order.tracking_number %}
+                                        <div><strong>Tracking:</strong> {{ order.carrier }} {{ order.tracking_number }}</div>
+                                    {% endif %}
+                                    {% if order.estimated_delivery %}
+                                        <div><strong>ETA:</strong> {{ order.estimated_delivery|date:"M d, Y" }}</div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
                                 </div>
                             </div>
                             

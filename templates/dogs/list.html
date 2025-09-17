@@ -149,7 +149,7 @@
                     <div class="bg-white rounded-2xl shadow-lg overflow-hidden card-hover">
                         <div class="relative">
                             <img src="{{ dog.image.url }}" alt="{{ dog.name }}" 
-                                 class="w-full h-64 object-cover">
+                                 class="w-full h-64 object-cover" loading="lazy">
                             
                             <!-- Status Badge -->
                             <div class="absolute top-4 left-4">
@@ -169,10 +169,10 @@
                             </div>
                             
                             <!-- Favorite Button -->
-                            {% if user.is_authenticated %}
+                            {% if user.is_authenticated and not user.is_seller %}
                                 <div class="absolute top-4 right-4">
                                     <button onclick="toggleFavorite({{ dog.pk }})" 
-                                            class="bg-white text-red-500 p-2 rounded-full shadow-lg hover:bg-red-500 hover:text-white transition duration-300"
+                                            class="bg-white text-red-500 p-2 rounded-full shadow-lg hover:bg-red-500 hover:text-white transition duration-300 {% if favorited_ids and dog.id in favorited_ids %}bg-red-500 text-white{% endif %}"
                                             id="favorite-btn-{{ dog.pk }}">
                                         <i class="fas fa-heart"></i>
                                     </button>

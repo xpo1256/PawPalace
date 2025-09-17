@@ -52,6 +52,11 @@ class HomeView(ListView):
             for breed in popular_breeds
         ]
         
+        # Favorited ids for heart state
+        if self.request.user.is_authenticated and not self.request.user.is_seller:
+            context['favorited_ids'] = set(
+                Favorite.objects.filter(user=self.request.user).values_list('dog_id', flat=True)
+            )
         return context
 
 
@@ -151,6 +156,10 @@ class DogListView(ListView):
                 'neutered': bool(self.request.GET.get('neutered')),
             }
             context['saved_search_form'] = SavedSearchForm(initial=initial)
+        if self.request.user.is_authenticated and not self.request.user.is_seller:
+            context['favorited_ids'] = set(
+                Favorite.objects.filter(user=self.request.user).values_list('dog_id', flat=True)
+            )
         return context
 
 
@@ -525,6 +534,22 @@ def update_tracking(request, order_id):
     if shipment_status == 'delivered':
         order.delivered_at = timezone.now()
     order.save()
+    # Notify buyer via email when tracking changes
+    try:
+        if order.buyer.email:
+            from django.core.mail import send_mail
+            from django.conf import settings
+            status_readable = dict(Order.SHIPMENT_STATUS_CHOICES).get(order.shipment_status, order.shipment_status)
+            tracking_info = f"\nCarrier: {order.carrier or '-'}\nTracking #: {order.tracking_number or '-'}\nETA: {order.estimated_delivery or '-'}"
+            send_mail(
+                subject=f"Update on your order for {order.dog.name}: {status_readable}",
+                message=f"Hello {order.buyer.first_name or order.buyer.username},\n\nThe seller updated shipment status for {order.dog.name} to: {status_readable}.{tracking_info}\n\nThank you for using PawPalace!",
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                recipient_list=[order.buyer.email],
+                fail_silently=True,
+            )
+    except Exception:
+        pass
     messages.success(request, 'Tracking updated.')
     return redirect('accounts:seller_orders')
 
@@ -556,17 +581,21 @@ def report_view(request, pk=None):
 
 # -------- Session-based Dog Cart (one-per-dog) --------
 
-def _get_dog_cart(session):
-    cart = session.get('dog_cart', {})
+def _get_unified_cart(session):
+    cart = session.get('cart', {})
     if not isinstance(cart, dict):
         cart = {}
+    if 'accessories' not in cart or not isinstance(cart.get('accessories'), dict):
+        cart['accessories'] = {}
+    if 'dogs' not in cart or not isinstance(cart.get('dogs'), dict):
+        cart['dogs'] = {}
     return cart
 
 
 @login_required
 def dog_cart_view(request):
-    cart = _get_dog_cart(request.session)
-    ids = [int(_id) for _id in cart.keys()]
+    cart = _get_unified_cart(request.session)
+    ids = [int(_id) for _id in cart.get('dogs', {}).keys()]
     dogs_qs = Dog.objects.filter(id__in=ids)
     items = []
     for dog in dogs_qs:
@@ -583,10 +612,9 @@ def add_dog_to_cart(request, pk):
     if request.user.is_seller or request.user == dog.seller:
         messages.error(request, 'Only buyers can add dogs to cart and not their own listings.')
         return redirect('dogs:detail', pk=dog.pk)
-    cart = _get_dog_cart(request.session)
-    # Only allow one entry per dog (value always 1)
-    cart[str(dog.id)] = 1
-    request.session['dog_cart'] = cart
+    cart = _get_unified_cart(request.session)
+    cart['dogs'][str(dog.id)] = 1
+    request.session['cart'] = cart
     messages.success(request, f'Added "{dog.name}" to dog cart.')
     return redirect(request.POST.get('next') or dog.get_absolute_url())
 
@@ -594,9 +622,9 @@ def add_dog_to_cart(request, pk):
 @login_required
 def remove_dog_from_cart(request, pk):
     dog = get_object_or_404(Dog, pk=pk)
-    cart = _get_dog_cart(request.session)
-    if str(dog.id) in cart:
-        cart.pop(str(dog.id))
-        request.session['dog_cart'] = cart
+    cart = _get_unified_cart(request.session)
+    if str(dog.id) in cart.get('dogs', {}):
+        cart['dogs'].pop(str(dog.id))
+        request.session['cart'] = cart
         messages.info(request, f'Removed "{dog.name}" from dog cart.')
     return redirect('dogs:cart')

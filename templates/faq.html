@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}FAQ - PawPalace{% endblock %}
+{% block content %}
+<section class="py-12 bg-gray-50">
+  <div class="max-w-4xl mx-auto px-4">
+    <h1 class="text-3xl font-bold mb-6">Frequently Asked Questions</h1>
+    <div class="space-y-4">
+      <details class="bg-white p-4 rounded shadow">
+        <summary class="font-semibold cursor-pointer">How do I contact a seller?</summary>
+        <p class="mt-2 text-gray-600">Use the Contact Seller button on any dog page to send a message.</p>
+      </details>
+      <details class="bg-white p-4 rounded shadow">
+        <summary class="font-semibold cursor-pointer">How are accessories paid?</summary>
+        <p class="mt-2 text-gray-600">Accessories are paid via Stripe at checkout. Dogs are arranged directly with sellers.</p>
+      </details>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+

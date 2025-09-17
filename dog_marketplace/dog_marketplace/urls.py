@@ -30,6 +30,9 @@ urlpatterns = [
     path('accessories/', include('accessories.urls')),
     path('about/', TemplateView.as_view(template_name='about.html'), name='about'),
     path('contact/', TemplateView.as_view(template_name='contact.html'), name='contact'),
+    path('faq/', TemplateView.as_view(template_name='faq.html'), name='faq'),
+    path('privacy/', TemplateView.as_view(template_name='privacy.html'), name='privacy'),
+    path('terms/', TemplateView.as_view(template_name='terms.html'), name='terms'),
 ]
 
 # Serve media files during development
