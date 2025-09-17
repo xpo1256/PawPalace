@@ -298,3 +298,59 @@ def create_order(request, pk):
         'form': form,
         'dog': dog
     })
+
+
+@login_required
+def accept_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id, status='pending')
+    # Only the seller of the dog can accept
+    if request.user != order.dog.seller:
+        messages.error(request, 'You do not have permission to accept this order.')
+        return redirect('accounts:seller_orders')
+    order.status = 'confirmed'
+    order.save(update_fields=['status', 'updated_at'])
+    messages.success(request, 'Order accepted. Please coordinate with the buyer via messages.')
+    return redirect('accounts:seller_orders')
+
+
+@login_required
+def decline_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id, status='pending')
+    if request.user != order.dog.seller:
+        messages.error(request, 'You do not have permission to decline this order.')
+        return redirect('accounts:seller_orders')
+    order.status = 'cancelled'
+    order.save(update_fields=['status', 'updated_at'])
+    messages.info(request, 'Order declined.')
+    return redirect('accounts:seller_orders')
+
+
+@login_required
+def cancel_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    # Buyer can cancel when pending or confirmed; seller can also cancel if needed
+    if request.user != order.buyer and request.user != order.dog.seller:
+        messages.error(request, 'You do not have permission to cancel this order.')
+        return redirect('accounts:orders')
+    if order.status in ['completed', 'cancelled']:
+        messages.info(request, 'This order is already finalized.')
+        return redirect('accounts:orders')
+    order.status = 'cancelled'
+    order.save(update_fields=['status', 'updated_at'])
+    messages.success(request, 'Order cancelled.')
+    return redirect('accounts:orders' if request.user == order.buyer else 'accounts:seller_orders')
+
+
+@login_required
+def complete_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id, status='confirmed')
+    # Only seller can mark completed
+    if request.user != order.dog.seller:
+        messages.error(request, 'You do not have permission to complete this order.')
+        return redirect('accounts:seller_orders')
+    order.status = 'completed'
+    order.dog.status = 'sold'
+    order.dog.save(update_fields=['status'])
+    order.save(update_fields=['status', 'updated_at'])
+    messages.success(request, 'Order marked as completed. Congratulations!')
+    return redirect('accounts:seller_orders')
