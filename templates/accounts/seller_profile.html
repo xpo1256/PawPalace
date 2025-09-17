@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Seller Profile - {{ seller_user.full_name }}{% endblock %}
+
+{% block content %}
+<section class="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center space-x-4">
+      <div class="w-20 h-20 rounded-full bg-primary-300 flex items-center justify-center overflow-hidden">
+        {% if seller_user.profile_image %}
+          <img src="{{ seller_user.profile_image.url }}" alt="{{ seller_user.full_name }}" class="w-full h-full object-cover">
+        {% else %}
+          <i class="fas fa-user text-primary-800 text-3xl"></i>
+        {% endif %}
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold">{{ seller_user.full_name|default:seller_user.username }}</h1>
+        {% if seller_user.location %}
+        <div class="text-primary-200"><i class="fas fa-map-marker-alt mr-1"></i>{{ seller_user.location }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-10 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white rounded-xl shadow p-4 text-center">
+        <div class="text-sm text-gray-500">Dogs for sale</div>
+        <div class="text-2xl font-bold text-gray-900">{{ total_dogs }}</div>
+      </div>
+      <div class="bg-white rounded-xl shadow p-4 text-center">
+        <div class="text-sm text-gray-500">Accessories</div>
+        <div class="text-2xl font-bold text-gray-900">{{ total_accessories }}</div>
+      </div>
+    </div>
+
+    {% if seller_dogs %}
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">Dogs</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for dog in seller_dogs %}
+        <a href="{% url 'dogs:detail' dog.pk %}" class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+          <img src="{{ dog.image.url }}" alt="{{ dog.name }}" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-gray-900">{{ dog.name }}</h3>
+              <span class="text-primary-600 font-bold">${{ dog.price|floatformat:2 }}</span>
+            </div>
+            <div class="text-sm text-gray-500">{{ dog.breed }}</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if seller_accessories %}
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">Accessories</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for accessory in seller_accessories %}
+        <a href="{% url 'accessories:detail' accessory.pk %}" class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+          {% if accessory.primary_image %}
+          <img src="{{ accessory.primary_image.url }}" alt="{{ accessory.name }}" class="w-full h-48 object-cover">
+          {% else %}
+          <div class="w-full h-48 bg-primary-100 flex items-center justify-center">
+            <i class="fas fa-paw text-primary-600 text-2xl"></i>
+          </div>
+          {% endif %}
+          <div class="p-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-gray-900">{{ accessory.name }}</h3>
+              <span class="text-primary-600 font-bold">${{ accessory.price|floatformat:2 }}</span>
+            </div>
+            <div class="text-sm text-gray-500">{{ accessory.get_category_display }}</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

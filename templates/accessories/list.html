@@ -168,7 +168,9 @@
                         
                         <div class="mt-3 text-xs text-gray-500">
                             <i class="fas fa-user mr-1"></i>
-                            Sold by {{ accessory.seller.first_name }} {{ accessory.seller.last_name }}
+                            <a href="{% url 'accounts:seller_profile' accessory.seller.pk %}" class="hover:text-primary-600">
+                                Sold by {{ accessory.seller.first_name }} {{ accessory.seller.last_name }}
+                            </a>
                         </div>
                     </div>
                 </div>
