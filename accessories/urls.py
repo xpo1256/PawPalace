@@ -13,4 +13,8 @@ urlpatterns = [
     path('my-accessories/', views.my_accessories, name='my_accessories'),
     path('<int:pk>/favorite/', views.toggle_accessory_favorite, name='toggle_favorite'),
     path('favorites/', views.favorite_accessories, name='favorites'),
+    path('cart/', views.cart_view, name='cart'),
+    path('<int:pk>/cart/add/', views.add_to_cart, name='add_to_cart'),
+    path('<int:pk>/cart/update/', views.update_cart, name='update_cart'),
+    path('<int:pk>/cart/remove/', views.remove_from_cart, name='remove_from_cart'),
 ]

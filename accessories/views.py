@@ -41,6 +41,10 @@ class AccessoryListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_form'] = AccessorySearchForm(self.request.GET or None)
+        if self.request.user.is_authenticated and not self.request.user.is_seller:
+            context['favorited_ids'] = set(
+                AccessoryFavorite.objects.filter(user=self.request.user).values_list('accessory_id', flat=True)
+            )
         return context
 
 
@@ -53,6 +57,17 @@ class AccessoryDetailView(DetailView):
     model = Accessory
     template_name = 'accessories/detail.html'
     context_object_name = 'accessory'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        accessory = self.object
+        if self.request.user.is_authenticated:
+            context['is_favorited'] = AccessoryFavorite.objects.filter(user=self.request.user, accessory=accessory).exists()
+        context['related_accessories'] = Accessory.objects.filter(
+            is_available=True,
+            category=accessory.category
+        ).exclude(pk=accessory.pk).order_by('-created_at')[:4]
+        return context
 
 
 @login_required
@@ -152,5 +167,69 @@ def favorite_accessories(request):
     return render(request, 'accessories/favorites.html', {
         'favorites': favorites,
     })
+
+
+# -------- Cart (session-based) --------
+
+def _get_cart(session):
+    cart = session.get('cart', {})
+    if not isinstance(cart, dict):
+        cart = {}
+    return cart
+
+
+@login_required
+def cart_view(request):
+    cart = _get_cart(request.session)
+    ids = [int(_id) for _id in cart.keys()]
+    accessories = Accessory.objects.filter(id__in=ids)
+    items = []
+    total = 0
+    for accessory in accessories:
+        qty = int(cart.get(str(accessory.id), 1))
+        line_total = accessory.price * qty
+        total += line_total
+        items.append({'accessory': accessory, 'quantity': qty, 'line_total': line_total})
+    return render(request, 'accessories/cart.html', {'items': items, 'total': total})
+
+
+@login_required
+def add_to_cart(request, pk):
+    if request.method != 'POST':
+        return redirect('accessories:list')
+    accessory = get_object_or_404(Accessory, pk=pk, is_available=True)
+    cart = _get_cart(request.session)
+    current = int(cart.get(str(accessory.id), 0))
+    cart[str(accessory.id)] = min(current + 1, max(1, accessory.quantity or 1))
+    request.session['cart'] = cart
+    messages.success(request, f'Added "{accessory.name}" to cart.')
+    return redirect(request.POST.get('next') or accessory.get_absolute_url())
+
+
+@login_required
+def update_cart(request, pk):
+    if request.method != 'POST':
+        return redirect('accessories:cart')
+    accessory = get_object_or_404(Accessory, pk=pk)
+    qty = int(request.POST.get('quantity', 1))
+    qty = max(0, qty)
+    cart = _get_cart(request.session)
+    if qty == 0:
+        cart.pop(str(accessory.id), None)
+    else:
+        cart[str(accessory.id)] = qty
+    request.session['cart'] = cart
+    return redirect('accessories:cart')
+
+
+@login_required
+def remove_from_cart(request, pk):
+    accessory = get_object_or_404(Accessory, pk=pk)
+    cart = _get_cart(request.session)
+    if str(accessory.id) in cart:
+        cart.pop(str(accessory.id))
+        request.session['cart'] = cart
+        messages.info(request, f'Removed "{accessory.name}" from cart.')
+    return redirect('accessories:cart')
 
 
