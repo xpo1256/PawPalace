@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Accessory, AccessoryCategory
+from .models import Accessory, AccessoryCategory, AccessoryFavorite
 
 
 @admin.register(AccessoryCategory)
@@ -43,3 +43,10 @@ class AccessoryAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         })
     )
+
+
+@admin.register(AccessoryFavorite)
+class AccessoryFavoriteAdmin(admin.ModelAdmin):
+    list_display = ['user', 'accessory', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['user__username', 'accessory__name']

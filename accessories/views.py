@@ -16,7 +16,7 @@ class AccessoryListView(ListView):
     paginate_by = 12
 
     def get_queryset(self):
-        queryset = Accessory.objects.filter(is_available=True).order_by('-created_at')
+        queryset = Accessory.objects.filter(is_available=True, is_approved=True).order_by('-created_at')
         form = AccessorySearchForm(self.request.GET or None)
         if form.is_valid():
             query = form.cleaned_data.get('query')
@@ -49,7 +49,7 @@ class AccessoryListView(ListView):
 
 
 def accessories_shop(request):
-    accessories = Accessory.objects.filter(is_available=True).order_by('-created_at')
+    accessories = Accessory.objects.filter(is_available=True, is_approved=True).order_by('-created_at')
     return render(request, 'accessories/shop.html', {'accessories': accessories})
 
 
@@ -64,7 +64,7 @@ class AccessoryDetailView(DetailView):
         if self.request.user.is_authenticated:
             context['is_favorited'] = AccessoryFavorite.objects.filter(user=self.request.user, accessory=accessory).exists()
         context['related_accessories'] = Accessory.objects.filter(
-            is_available=True,
+            is_available=True, is_approved=True,
             category=accessory.category
         ).exclude(pk=accessory.pk).order_by('-created_at')[:4]
         return context
