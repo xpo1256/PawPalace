@@ -12,7 +12,7 @@ class Command(BaseCommand):
     help = "Seed the database with mock accessories and categories."
 
     def add_arguments(self, parser):
-        parser.add_argument('--count', type=int, default=12, help='Number of accessories to create')
+        parser.add_argument('--count', type=int, default=24, help='Number of accessories to create')
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -79,6 +79,21 @@ class Command(BaseCommand):
                 'image_url': 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d'
             },
             {
+                'name': 'Floral Dog Dress', 'category': 'clothing', 'price': Decimal('22.99'),
+                'brand': 'PawCouture', 'description': 'Cute floral dress for special occasions.',
+                'image_url': 'https://images.unsplash.com/photo-1525253086316-d0c936c814f8'
+            },
+            {
+                'name': 'Tuxedo Outfit', 'category': 'clothing', 'price': Decimal('27.99'),
+                'brand': 'PawCouture', 'description': 'Formal tuxedo outfit for dogs.',
+                'image_url': 'https://images.unsplash.com/photo-1543466835-00a7907e9de1'
+            },
+            {
+                'name': 'Winter Sweater', 'category': 'clothing', 'price': Decimal('18.99'),
+                'brand': 'CozyTail', 'description': 'Warm knit sweater for chilly walks.',
+                'image_url': 'https://images.unsplash.com/photo-1521302200778-33500795e128'
+            },
+            {
                 'name': 'Travel Water Bottle', 'category': 'travel', 'price': Decimal('16.99'),
                 'brand': 'HydraPaws', 'description': 'Portable bottle with built-in bowl.',
                 'image_url': 'https://images.unsplash.com/photo-1541123603104-512919d6a96c'
@@ -109,6 +124,19 @@ class Command(BaseCommand):
                 'image_url': 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1'
             },
         ]
+
+        # Expand items up to count by cloning with suffix
+        if options['count'] > len(items):
+            base = list(items)
+            i = 1
+            while len(items) < options['count']:
+                for it in base:
+                    clone = dict(it)
+                    clone['name'] = f"{it['name']} #{i}"
+                    items.append(clone)
+                    if len(items) >= options['count']:
+                        break
+                i += 1
 
         created_count = 0
         for data in items[: options['count']]:

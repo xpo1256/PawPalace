@@ -10,6 +10,7 @@ from django.conf import settings
 
 from .forms import AccessoryForm, AccessorySearchForm
 from .models import Accessory, AccessoryFavorite
+from .models import AccessoryOrder, AccessoryOrderItem
 
 
 class AccessoryListView(ListView):
@@ -284,8 +285,16 @@ def checkout_view(request):
         request.session['prefill_message'] = content
         return redirect('messaging:start_conversation', user_pk=seller_id)
 
+    # Also include dogs in cart for combined view
+    from dogs.views import _get_dog_cart
+    from dogs.models import Dog
+    dog_cart = _get_dog_cart(request.session)
+    dog_ids = [int(_id) for _id in dog_cart.keys()]
+    dogs = Dog.objects.filter(id__in=dog_ids)
+
     return render(request, 'accessories/checkout.html', {
         'grouped_items': grouped,
+        'dog_items': dogs,
     })
 
 
@@ -307,15 +316,18 @@ def checkout_pay(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
 
     line_items = []
+    order_total_cents = 0
     for accessory in accessories:
         qty = int(cart.get(str(accessory.id), 1))
+        amount_cents = int(float(accessory.price) * 100)
+        order_total_cents += amount_cents * max(1, qty)
         line_items.append({
             'price_data': {
                 'currency': 'usd',
                 'product_data': {
                     'name': accessory.name,
                 },
-                'unit_amount': int(float(accessory.price) * 100),
+                'unit_amount': amount_cents,
             },
             'quantity': max(1, qty),
         })
@@ -334,7 +346,66 @@ def checkout_pay(request):
         messages.error(request, f'Payment error: {e}')
         return redirect('accessories:checkout')
 
+    # Create a pending order and items; store Stripe session id
+    order = AccessoryOrder.objects.create(
+        user=request.user,
+        status='pending',
+        total_amount=order_total_cents / 100.0,
+        stripe_session_id=session.id,
+    )
+    for accessory in accessories:
+        qty = int(cart.get(str(accessory.id), 1))
+        AccessoryOrderItem.objects.create(
+            order=order,
+            accessory=accessory,
+            seller=accessory.seller,
+            quantity=max(1, qty),
+            unit_price=accessory.price,
+            line_total=accessory.price * max(1, qty),
+        )
+
     return redirect(session.url)
+
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    endpoint_secret = getattr(settings, 'STRIPE_WEBHOOK_SECRET', '')
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, endpoint_secret
+        )
+    except Exception as e:
+        return HttpResponse(status=400)
+
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        session_id = session.get('id')
+        try:
+            order = AccessoryOrder.objects.select_related('user').get(stripe_session_id=session_id, status='pending')
+        except AccessoryOrder.DoesNotExist:
+            return HttpResponse(status=200)
+        # Mark paid and decrement inventory
+        order.status = 'paid'
+        order.save(update_fields=['status', 'updated_at'])
+        for item in order.items.select_related('accessory'):
+            acc = item.accessory
+            if acc.quantity is not None:
+                acc.quantity = max(0, (acc.quantity or 0) - item.quantity)
+                if acc.quantity == 0:
+                    acc.is_available = False
+                acc.save(update_fields=['quantity', 'is_available'])
+        # Clear the user's cart (best-effort if session is available)
+        # Webhook has no session, so we skip session clearing here.
+
+    return HttpResponse(status=200)
 
 
 def checkout_success(request):

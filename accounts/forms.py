@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import User
+from .models import SellerReview
 
 
 class UserRegistrationForm(UserCreationForm):
@@ -130,4 +131,15 @@ class UserProfileForm(forms.ModelForm):
             'location': 'Location',
             'bio': 'Bio',
             'profile_image': 'Profile Image',
+        }
+
+
+class SellerReviewForm(forms.ModelForm):
+    rating = forms.ChoiceField(choices=[(i, i) for i in range(1, 6)], widget=forms.Select(), label='Rating (1-5)')
+
+    class Meta:
+        model = SellerReview
+        fields = ['rating', 'comment']
+        widgets = {
+            'comment': forms.Textarea(attrs={'rows': 4}),
         }

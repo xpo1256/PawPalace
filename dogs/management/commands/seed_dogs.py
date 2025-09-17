@@ -10,7 +10,7 @@ class Command(BaseCommand):
     help = "Seed the database with mock dogs and a demo seller."
 
     def add_arguments(self, parser):
-        parser.add_argument('--count', type=int, default=8, help='Number of dogs to create')
+        parser.add_argument('--count', type=int, default=20, help='Number of dogs to create')
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -70,6 +70,20 @@ class Command(BaseCommand):
                 'is_vaccinated': True, 'is_neutered': True, 'image_url': 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9'
             },
         ]
+
+        # Duplicate pattern with variations if more requested than base list
+        if options['count'] > len(dog_data):
+            base = list(dog_data)
+            i = 1
+            while len(dog_data) < options['count']:
+                for d in base:
+                    clone = dict(d)
+                    clone['name'] = f"{d['name']}{i}"
+                    clone['price'] = d['price']
+                    dog_data.append(clone)
+                    if len(dog_data) >= options['count']:
+                        break
+                i += 1
 
         created_count = 0
         for data in dog_data[: options['count']]:

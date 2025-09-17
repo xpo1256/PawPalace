@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Dog Cart - PawPalace{% endblock %}
+{% block content %}
+<section class="py-12">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold mb-6">Dog Cart</h1>
+        {% if items %}
+        <div class="space-y-4">
+            {% for item in items %}
+            <div class="bg-white rounded-xl shadow p-4 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <img src="{{ item.dog.image.url }}" alt="{{ item.dog.name }}" class="w-20 h-20 rounded object-cover">
+                    <div>
+                        <div class="text-lg font-semibold">{{ item.dog.name }}</div>
+                        <div class="text-gray-600">{{ item.dog.breed }} • ${{ item.dog.price }}</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'dogs:detail' item.dog.pk %}" class="px-4 py-2 bg-primary-500 text-white rounded-lg">Details</a>
+                    <form method="post" action="{% url 'dogs:remove_from_cart' item.dog.pk %}">
+                        {% csrf_token %}
+                        <button class="px-4 py-2 bg-gray-100 rounded-lg">Remove</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="mt-8 flex justify-end gap-3">
+            <a href="{% url 'dogs:list' %}" class="px-4 py-2 bg-gray-100 rounded-lg">Continue Browsing</a>
+        </div>
+        {% else %}
+            <div class="text-center py-16 bg-white rounded-xl shadow">
+                <div class="text-2xl font-semibold mb-2">Your dog cart is empty</div>
+                <p class="text-gray-600 mb-6">Browse available dogs and add them to your cart.</p>
+                <a href="{% url 'dogs:list' %}" class="px-5 py-3 bg-primary-500 text-white rounded-lg">Browse Dogs</a>
+            </div>
+        {% endif %}
+    </div>
+    </section>
+{% endblock %}
+
+

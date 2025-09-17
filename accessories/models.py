@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from decimal import Decimal
 
 User = get_user_model()
 
@@ -116,3 +117,41 @@ class AccessoryFavorite(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.accessory.name}"
+
+
+class AccessoryOrder(models.Model):
+    """Order for accessories via Stripe checkout"""
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
+        ('fulfilled', 'Fulfilled'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='accessory_orders')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    stripe_session_id = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"AccessoryOrder #{self.id} - {self.user.username} ({self.status})"
+
+
+class AccessoryOrderItem(models.Model):
+    """Line item for an accessory order"""
+
+    order = models.ForeignKey(AccessoryOrder, on_delete=models.CASCADE, related_name='items')
+    accessory = models.ForeignKey(Accessory, on_delete=models.PROTECT)
+    seller = models.ForeignKey(User, on_delete=models.PROTECT, related_name='sold_accessory_items')
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    line_total = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.accessory.name} x{self.quantity}"

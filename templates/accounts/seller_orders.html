@@ -141,46 +141,69 @@
                                         {% endif %}
                                         {{ order.get_status_display }}
                                     </span>
+                                    {% if order.shipment_status != 'none' %}
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        {{ order.get_shipment_status_display }}{% if order.tracking_number %} • {{ order.carrier }} {{ order.tracking_number }}{% endif %}
+                                    </div>
+                                    {% endif %}
                                 </td>
 
                                 <!-- Actions -->
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex flex-wrap gap-2">
-                                        <a href="{% url 'dogs:detail' order.dog.pk %}" 
-                                           class="px-3 py-1 bg-gray-100 text-gray-800 rounded hover:bg-gray-200">
-                                            <i class="fas fa-eye mr-1"></i> View
-                                        </a>
-                                        <a href="{% url 'messaging:inbox' %}" 
-                                           class="px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200">
-                                            <i class="fas fa-comments mr-1"></i> Message
-                                        </a>
-                                        {% if order.status == 'pending' %}
-                                            <form method="post" action="{% url 'dogs:accept_order' order.id %}">
-                                                {% csrf_token %}
-                                                <button type="submit" class="px-3 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200">
-                                                    <i class="fas fa-check mr-1"></i> Accept
-                                                </button>
-                                            </form>
-                                            <form method="post" action="{% url 'dogs:decline_order' order.id %}">
-                                                {% csrf_token %}
-                                                <button type="submit" class="px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200">
-                                                    <i class="fas fa-times mr-1"></i> Decline
-                                                </button>
-                                            </form>
-                                        {% elif order.status == 'confirmed' %}
-                                            <form method="post" action="{% url 'dogs:complete_order' order.id %}">
-                                                {% csrf_token %}
-                                                <button type="submit" class="px-3 py-1 bg-primary-100 text-primary-800 rounded hover:bg-primary-200">
-                                                    <i class="fas fa-check-double mr-1"></i> Complete
-                                                </button>
-                                            </form>
-                                            <form method="post" action="{% url 'dogs:cancel_order' order.id %}">
-                                                {% csrf_token %}
-                                                <button type="submit" class="px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200">
-                                                    <i class="fas fa-ban mr-1"></i> Cancel
-                                                </button>
-                                            </form>
-                                        {% endif %}
+                                    <div class="flex flex-col gap-2">
+                                        <div class="flex flex-wrap gap-2">
+                                            <a href="{% url 'dogs:detail' order.dog.pk %}" 
+                                               class="px-3 py-1 bg-gray-100 text-gray-800 rounded hover:bg-gray-200">
+                                                <i class="fas fa-eye mr-1"></i> View
+                                            </a>
+                                            <a href="{% url 'messaging:inbox' %}" 
+                                               class="px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200">
+                                                <i class="fas fa-comments mr-1"></i> Message
+                                            </a>
+                                            {% if order.status == 'pending' %}
+                                                <form method="post" action="{% url 'dogs:accept_order' order.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="px-3 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200">
+                                                        <i class="fas fa-check mr-1"></i> Accept
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="{% url 'dogs:decline_order' order.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200">
+                                                        <i class="fas fa-times mr-1"></i> Decline
+                                                    </button>
+                                                </form>
+                                            {% elif order.status == 'confirmed' %}
+                                                <form method="post" action="{% url 'dogs:complete_order' order.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="px-3 py-1 bg-primary-100 text-primary-800 rounded hover:bg-primary-200">
+                                                        <i class="fas fa-check-double mr-1"></i> Complete
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="{% url 'dogs:cancel_order' order.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200">
+                                                        <i class="fas fa-ban mr-1"></i> Cancel
+                                                    </button>
+                                                </form>
+                                                <details class="mt-2">
+                                                  <summary class="cursor-pointer text-sm text-gray-600">Update Tracking</summary>
+                                                  <form method="post" action="{% url 'dogs:update_tracking' order.id %}" class="mt-2 flex flex-wrap gap-2 items-center">
+                                                    {% csrf_token %}
+                                                    <select name="shipment_status" class="border rounded px-2 py-1 text-sm">
+                                                      <option value="processing" {% if order.shipment_status=='processing' %}selected{% endif %}>Processing</option>
+                                                      <option value="shipped" {% if order.shipment_status=='shipped' %}selected{% endif %}>Shipped</option>
+                                                      <option value="in_transit" {% if order.shipment_status=='in_transit' %}selected{% endif %}>In Transit</option>
+                                                      <option value="delivered" {% if order.shipment_status=='delivered' %}selected{% endif %}>Delivered</option>
+                                                    </select>
+                                                    <input type="text" name="carrier" value="{{ order.carrier }}" placeholder="Carrier" class="border rounded px-2 py-1 text-sm">
+                                                    <input type="text" name="tracking_number" value="{{ order.tracking_number }}" placeholder="Tracking #" class="border rounded px-2 py-1 text-sm">
+                                                    <input type="date" name="estimated_delivery" value="{{ order.estimated_delivery|date:'Y-m-d' }}" class="border rounded px-2 py-1 text-sm">
+                                                    <button type="submit" class="px-3 py-1 bg-gray-100 text-gray-800 rounded hover:bg-gray-200">Save</button>
+                                                  </form>
+                                                </details>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </td>
                             </tr>

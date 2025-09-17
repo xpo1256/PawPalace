@@ -110,6 +110,9 @@
                     <a href="{% url 'dogs:list' %}" class="text-gray-700 hover:text-primary-500 transition duration-300">
                         <i class="fas fa-dog mr-1"></i> Browse Dogs
                     </a>
+                    <a href="{% url 'dogs:cart' %}" class="text-gray-700 hover:text-primary-500 transition duration-300 relative">
+                        <i class="fas fa-shopping-basket mr-1"></i> Dog Cart
+                    </a>
                     <a href="{% url 'accessories:shop' %}" class="text-gray-700 hover:text-primary-500 transition duration-300">
                         <i class="fas fa-shopping-bag mr-1"></i> Accessories
                     </a>
@@ -201,6 +204,9 @@
                 </a>
                 <a href="{% url 'dogs:list' %}" class="block px-3 py-2 text-gray-700 hover:text-primary-500 transition duration-300">
                     <i class="fas fa-dog mr-2"></i> Browse Dogs
+                </a>
+                <a href="{% url 'dogs:cart' %}" class="block px-3 py-2 text-gray-700 hover:text-primary-500 transition duration-300">
+                    <i class="fas fa-shopping-basket mr-2"></i> Dog Cart
                 </a>
                 <a href="{% url 'accessories:shop' %}" class="block px-3 py-2 text-gray-700 hover:text-primary-500 transition duration-300">
                     <i class="fas fa-shopping-bag mr-2"></i> Accessories

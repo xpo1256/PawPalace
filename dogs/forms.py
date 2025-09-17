@@ -1,5 +1,6 @@
 from django import forms
-from .models import Dog, Order
+from .models import Dog, Order, SavedSearch
+from .models import Report
 
 
 class DogForm(forms.ModelForm):
@@ -224,3 +225,42 @@ class DogSearchForm(forms.Form):
             'class': 'w-5 h-5 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500'
         })
     )
+
+
+class SavedSearchForm(forms.ModelForm):
+    name = forms.CharField(max_length=100)
+    search = forms.CharField(required=False)
+    breed = forms.CharField(required=False)
+    gender = forms.ChoiceField(choices=[('', 'Any'), ('male', 'Male'), ('female', 'Female')], required=False)
+    location = forms.CharField(required=False)
+    min_price = forms.DecimalField(required=False)
+    max_price = forms.DecimalField(required=False)
+    min_age = forms.IntegerField(required=False)
+    max_age = forms.IntegerField(required=False)
+    vaccinated = forms.BooleanField(required=False)
+    neutered = forms.BooleanField(required=False)
+
+    class Meta:
+        model = SavedSearch
+        fields = ['name']
+
+    def build_params(self):
+        cleaned = self.cleaned_data
+        return {
+            'search': cleaned.get('search') or '',
+            'breed': cleaned.get('breed') or '',
+            'gender': cleaned.get('gender') or '',
+            'location': cleaned.get('location') or '',
+            'min_price': cleaned.get('min_price'),
+            'max_price': cleaned.get('max_price'),
+            'min_age': cleaned.get('min_age'),
+            'max_age': cleaned.get('max_age'),
+            'vaccinated': cleaned.get('vaccinated') or False,
+            'neutered': cleaned.get('neutered') or False,
+        }
+
+
+class ReportForm(forms.ModelForm):
+    class Meta:
+        model = Report
+        fields = ['target_type', 'reason', 'details']

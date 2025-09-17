@@ -8,6 +8,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import User
 from .forms import UserRegistrationForm, UserProfileForm
+from .forms import SellerReviewForm
 from dogs.models import Dog, Favorite, Order
 from accessories.models import Accessory
 
@@ -149,7 +150,7 @@ def seller_orders(request):
     ).select_related('dog', 'buyer').order_by('-created_at')
     
     return render(request, 'accounts/seller_orders.html', {
-        'orders': orders_list
+        'orders': orders_list,
     })
 
 
@@ -163,12 +164,38 @@ def seller_profile(request, pk):
     seller_dogs = Dog.objects.filter(seller=seller, status='available').order_by('-created_at')
     seller_accessories = Accessory.objects.filter(seller=seller, is_available=True).order_by('-created_at')
 
+    # Reviews and form
+    from .models import SellerReview
+    can_review = False
+    if request.user.is_authenticated and not request.user.is_seller and request.user != seller:
+        # Buyer can review if has a completed order with this seller
+        can_review = Order.objects.filter(buyer=request.user, dog__seller=seller, status='completed').exists()
+
+    if request.method == 'POST' and can_review:
+        form = SellerReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.reviewer = request.user
+            review.seller = seller
+            review.save()
+            messages.success(request, 'Thank you for your review!')
+            return redirect('accounts:seller_profile', pk=pk)
+    else:
+        form = SellerReviewForm()
+
+    reviews = SellerReview.objects.filter(seller=seller).select_related('reviewer')
+    avg_rating = reviews.aggregate(avg=models.Avg('rating'))['avg'] or 0
+
     context = {
         'seller_user': seller,
         'seller_dogs': seller_dogs,
         'seller_accessories': seller_accessories,
         'total_dogs': seller_dogs.count(),
         'total_accessories': seller_accessories.count(),
+        'reviews': reviews,
+        'avg_rating': avg_rating,
+        'can_review': can_review,
+        'review_form': form,
     }
     return render(request, 'accounts/seller_profile.html', context)
 

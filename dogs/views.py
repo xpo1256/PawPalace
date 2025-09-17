@@ -6,11 +6,17 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db.models import Q, Count
 from django.urls import reverse_lazy
+from django.db import transaction
+from django.core.mail import send_mail
+from django.conf import settings
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from .models import Dog, Favorite, Order
-from .forms import DogForm, OrderForm
+from .forms import DogForm, OrderForm, SavedSearchForm, ReportForm
+from .models import Report
+from .forms import DogForm, OrderForm, SavedSearchForm
 from accounts.models import User
+from .models import SavedSearch
 
 
 class HomeView(ListView):
@@ -130,6 +136,21 @@ class DogListView(ListView):
         context['current_location'] = self.request.GET.get('location', '')
         context['current_sort'] = self.request.GET.get('sort', '-created_at')
         
+        # Saved search form prefilled from current filters
+        if self.request.user.is_authenticated and not self.request.user.is_seller:
+            initial = {
+                'search': self.request.GET.get('search', ''),
+                'breed': self.request.GET.get('breed', ''),
+                'gender': self.request.GET.get('gender', ''),
+                'location': self.request.GET.get('location', ''),
+                'min_price': self.request.GET.get('min_price'),
+                'max_price': self.request.GET.get('max_price'),
+                'min_age': self.request.GET.get('min_age'),
+                'max_age': self.request.GET.get('max_age'),
+                'vaccinated': bool(self.request.GET.get('vaccinated')),
+                'neutered': bool(self.request.GET.get('neutered')),
+            }
+            context['saved_search_form'] = SavedSearchForm(initial=initial)
         return context
 
 
@@ -262,7 +283,7 @@ def toggle_favorite(request, pk):
 @login_required
 def create_order(request, pk):
     """Create an order for a dog"""
-    dog = get_object_or_404(Dog, pk=pk, status='available')
+    dog = get_object_or_404(Dog, pk=pk)
     
     # Prevent sellers from buying dogs
     if request.user.is_seller:
@@ -277,15 +298,65 @@ def create_order(request, pk):
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
-            order = form.save(commit=False)
-            order.buyer = request.user
-            order.dog = dog
-            order.save()
-            
-            # Update dog status to pending
-            dog.status = 'pending'
-            dog.save()
-            
+            with transaction.atomic():
+                # Re-fetch with lock to avoid race conditions
+                dog_locked = Dog.objects.select_for_update().get(pk=dog.pk)
+                if dog_locked.status != 'available':
+                    messages.error(request, 'Sorry, this dog is not available anymore.')
+                    return redirect('dogs:detail', pk=dog.pk)
+
+                # Prevent duplicate active orders by same buyer
+                if Order.objects.filter(buyer=request.user, dog=dog_locked, status__in=['pending', 'confirmed']).exists():
+                    messages.info(request, 'You already have an active order for this dog.')
+                    return redirect('dogs:detail', pk=dog.pk)
+
+                order = form.save(commit=False)
+                order.buyer = request.user
+                order.dog = dog_locked
+                order.save()
+
+                # Update dog status to pending
+                dog_locked.status = 'pending'
+                dog_locked.save(update_fields=['status'])
+
+            # Ensure a conversation exists and notify via message and email (best-effort)
+            try:
+                from messaging.models import Conversation, Message
+                conversation = Conversation.objects.filter(dog=dog).filter(participants=request.user).filter(participants=dog.seller).first()
+                if not conversation:
+                    conversation = Conversation.objects.create(dog=dog)
+                    conversation.participants.add(request.user, dog.seller)
+                Message.objects.create(
+                    sender=request.user,
+                    receiver=dog.seller,
+                    dog=dog,
+                    conversation=conversation,
+                    subject=f'New order for {dog.name}',
+                    content=f'Hi {dog.seller.first_name or dog.seller.username}, I have placed an order for {dog.name}. Looking forward to your confirmation.'
+                )
+            except Exception:
+                pass
+
+            # Email notifications (console backend in dev)
+            try:
+                send_mail(
+                    subject=f'New order placed for {dog.name}',
+                    message=f'Buyer {request.user.username} placed an order for {dog.name}. Log in to review.',
+                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                    recipient_list=[dog.seller.email] if dog.seller.email else [],
+                    fail_silently=True,
+                )
+                if request.user.email:
+                    send_mail(
+                        subject=f'Order submitted for {dog.name}',
+                        message='Your order was submitted. The seller will review and respond shortly.',
+                        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                        recipient_list=[request.user.email],
+                        fail_silently=True,
+                    )
+            except Exception:
+                pass
+
             messages.success(request, 'Order submitted successfully! The seller will contact you soon.')
             return redirect('dogs:detail', pk=dog.pk)
     else:
@@ -311,6 +382,18 @@ def accept_order(request, order_id):
         return redirect('accounts:seller_orders')
     order.status = 'confirmed'
     order.save(update_fields=['status', 'updated_at'])
+    # Email notify buyer
+    try:
+        if order.buyer.email:
+            send_mail(
+                subject=f'Your order for {order.dog.name} was accepted',
+                message='The seller accepted your order. You can coordinate next steps via Messages.',
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                recipient_list=[order.buyer.email],
+                fail_silently=True,
+            )
+    except Exception:
+        pass
     messages.success(request, 'Order accepted. Please coordinate with the buyer via messages.')
     return redirect('accounts:seller_orders')
 
@@ -324,6 +407,24 @@ def decline_order(request, order_id):
         return redirect('accounts:seller_orders')
     order.status = 'cancelled'
     order.save(update_fields=['status', 'updated_at'])
+    # Revert dog to available
+    try:
+        order.dog.status = 'available'
+        order.dog.save(update_fields=['status'])
+    except Exception:
+        pass
+    # Notify buyer
+    try:
+        if order.buyer.email:
+            send_mail(
+                subject=f'Your order for {order.dog.name} was declined',
+                message='The seller declined your order. You may explore other listings.',
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                recipient_list=[order.buyer.email],
+                fail_silently=True,
+            )
+    except Exception:
+        pass
     messages.info(request, 'Order declined.')
     return redirect('accounts:seller_orders')
 
@@ -341,6 +442,13 @@ def cancel_order(request, order_id):
         return redirect('accounts:orders')
     order.status = 'cancelled'
     order.save(update_fields=['status', 'updated_at'])
+    # If was pending/confirmed, free the dog
+    try:
+        if order.dog.status in ['pending']:
+            order.dog.status = 'available'
+            order.dog.save(update_fields=['status'])
+    except Exception:
+        pass
     messages.success(request, 'Order cancelled.')
     return redirect('accounts:orders' if request.user == order.buyer else 'accounts:seller_orders')
 
@@ -357,5 +465,138 @@ def complete_order(request, order_id):
     order.dog.status = 'sold'
     order.dog.save(update_fields=['status'])
     order.save(update_fields=['status', 'updated_at'])
+    # Notify buyer
+    try:
+        if order.buyer.email:
+            send_mail(
+                subject=f'Order completed for {order.dog.name}',
+                message='Congratulations! The order is marked completed. Please leave a review for the seller.',
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                recipient_list=[order.buyer.email],
+                fail_silently=True,
+            )
+    except Exception:
+        pass
     messages.success(request, 'Order marked as completed. Congratulations!')
     return redirect('accounts:seller_orders')
+
+
+@login_required
+@require_POST
+def save_search(request):
+    if request.user.is_seller:
+        return JsonResponse({'error': 'Sellers cannot save searches.'}, status=400)
+    form = SavedSearchForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({'error': 'Invalid form'}, status=400)
+    params = form.build_params()
+    SavedSearch.objects.create(user=request.user, name=form.cleaned_data['name'], params=params)
+    messages.success(request, 'Search saved. We will email you when new matching dogs are listed.')
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@require_POST
+def update_tracking(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    if request.user != order.dog.seller:
+        messages.error(request, 'You do not have permission to update this order.')
+        return redirect('accounts:seller_orders')
+    shipment_status = request.POST.get('shipment_status')
+    carrier = request.POST.get('carrier')
+    tracking_number = request.POST.get('tracking_number')
+    estimated_delivery = request.POST.get('estimated_delivery')
+    allowed = {'processing', 'shipped', 'in_transit', 'delivered'}
+    if shipment_status not in allowed:
+        shipment_status = 'processing'
+    order.shipment_status = shipment_status
+    order.carrier = carrier or None
+    order.tracking_number = tracking_number or None
+    if estimated_delivery:
+        try:
+            from datetime import datetime
+            order.estimated_delivery = datetime.strptime(estimated_delivery, '%Y-%m-%d').date()
+        except Exception:
+            pass
+    # Set timestamps heuristically
+    from django.utils import timezone
+    if shipment_status == 'shipped' and not order.shipped_at:
+        order.shipped_at = timezone.now()
+    if shipment_status == 'delivered':
+        order.delivered_at = timezone.now()
+    order.save()
+    messages.success(request, 'Tracking updated.')
+    return redirect('accounts:seller_orders')
+
+
+@login_required
+def report_view(request, pk=None):
+    # Report a dog or a user (from seller profile)
+    target_dog = None
+    reported_user = None
+    if pk:
+        target_dog = get_object_or_404(Dog, pk=pk)
+        reported_user = target_dog.seller
+    if request.method == 'POST':
+        form = ReportForm(request.POST)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.reporter = request.user
+            if target_dog and report.target_type == 'dog':
+                report.dog = target_dog
+            if reported_user and report.target_type == 'user':
+                report.reported_user = reported_user
+            report.save()
+            messages.success(request, 'Report submitted. Our team will review it.')
+            return redirect(target_dog.get_absolute_url() if target_dog else 'home')
+    else:
+        form = ReportForm()
+    return render(request, 'dogs/report.html', {'form': form, 'dog': target_dog})
+
+
+# -------- Session-based Dog Cart (one-per-dog) --------
+
+def _get_dog_cart(session):
+    cart = session.get('dog_cart', {})
+    if not isinstance(cart, dict):
+        cart = {}
+    return cart
+
+
+@login_required
+def dog_cart_view(request):
+    cart = _get_dog_cart(request.session)
+    ids = [int(_id) for _id in cart.keys()]
+    dogs_qs = Dog.objects.filter(id__in=ids)
+    items = []
+    for dog in dogs_qs:
+        items.append({'dog': dog})
+    return render(request, 'dogs/cart.html', {'items': items})
+
+
+@login_required
+def add_dog_to_cart(request, pk):
+    if request.method != 'POST':
+        return redirect('dogs:detail', pk=pk)
+    dog = get_object_or_404(Dog, pk=pk, status='available')
+    # Sellers cannot add, nor can owner
+    if request.user.is_seller or request.user == dog.seller:
+        messages.error(request, 'Only buyers can add dogs to cart and not their own listings.')
+        return redirect('dogs:detail', pk=dog.pk)
+    cart = _get_dog_cart(request.session)
+    # Only allow one entry per dog (value always 1)
+    cart[str(dog.id)] = 1
+    request.session['dog_cart'] = cart
+    messages.success(request, f'Added "{dog.name}" to dog cart.')
+    return redirect(request.POST.get('next') or dog.get_absolute_url())
+
+
+@login_required
+def remove_dog_from_cart(request, pk):
+    dog = get_object_or_404(Dog, pk=pk)
+    cart = _get_dog_cart(request.session)
+    if str(dog.id) in cart:
+        cart.pop(str(dog.id))
+        request.session['dog_cart'] = cart
+        messages.info(request, f'Removed "{dog.name}" from dog cart.')
+    return redirect('dogs:cart')

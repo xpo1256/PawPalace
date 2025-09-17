@@ -3,6 +3,12 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from PIL import Image
 import os
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
+import json
 
 User = get_user_model()
 
@@ -145,3 +151,114 @@ class Order(models.Model):
     
     def __str__(self):
         return f"Order #{self.id} - {self.dog.name} by {self.buyer.username}"
+
+    # Shipping/Tracking (optional if seller ships)
+    SHIPMENT_STATUS_CHOICES = [
+        ('none', 'Not Applicable'),
+        ('processing', 'Processing'),
+        ('shipped', 'Shipped'),
+        ('in_transit', 'In Transit'),
+        ('delivered', 'Delivered'),
+    ]
+    shipment_status = models.CharField(max_length=20, choices=SHIPMENT_STATUS_CHOICES, default='none')
+    carrier = models.CharField(max_length=50, blank=True, null=True)
+    tracking_number = models.CharField(max_length=100, blank=True, null=True)
+    estimated_delivery = models.DateField(blank=True, null=True)
+    shipped_at = models.DateTimeField(blank=True, null=True)
+    delivered_at = models.DateTimeField(blank=True, null=True)
+
+
+class SavedSearch(models.Model):
+    """Saved search criteria for dogs with email alerts"""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_searches')
+    name = models.CharField(max_length=100)
+    # Store filters as JSON (breed, gender, location, price range, age range, vaccinated, neutered, search)
+    params = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"SavedSearch {self.name} by {self.user.username}"
+
+
+class Report(models.Model):
+    """Reports for moderation on users or dog listings"""
+
+    TARGET_CHOICES = [
+        ('dog', 'Dog Listing'),
+        ('user', 'User'),
+    ]
+
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('reviewing', 'Reviewing'),
+        ('closed', 'Closed'),
+    ]
+
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports_made')
+    target_type = models.CharField(max_length=10, choices=TARGET_CHOICES)
+    dog = models.ForeignKey('Dog', on_delete=models.CASCADE, null=True, blank=True, related_name='reports')
+    reported_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='reports_received')
+    reason = models.CharField(max_length=200)
+    details = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='open')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Report {self.id} on {self.target_type}"
+
+
+def _dog_matches_params(dog: 'Dog', params: dict) -> bool:
+    try:
+        if params.get('breed') and params['breed'].lower() not in dog.breed.lower():
+            return False
+        if params.get('gender') and params['gender'] != dog.gender:
+            return False
+        if params.get('location') and params['location'].lower() not in dog.location.lower():
+            return False
+        if params.get('min_price') and float(dog.price) < float(params['min_price']):
+            return False
+        if params.get('max_price') and float(dog.price) > float(params['max_price']):
+            return False
+        if params.get('min_age') and int(dog.age) < int(params['min_age']):
+            return False
+        if params.get('max_age') and int(dog.age) > int(params['max_age']):
+            return False
+        if params.get('vaccinated') and not dog.is_vaccinated:
+            return False
+        if params.get('neutered') and not dog.is_neutered:
+            return False
+        if params.get('search'):
+            q = params['search'].lower()
+            if q not in dog.name.lower() and q not in dog.breed.lower() and q not in dog.location.lower() and q not in (dog.description or '').lower():
+                return False
+        return dog.status == 'available'
+    except Exception:
+        return False
+
+
+@receiver(post_save, sender=Dog)
+def notify_saved_searches(sender, instance: 'Dog', created: bool, **kwargs):
+    if not created:
+        return
+    try:
+        from .models import SavedSearch
+        searches = SavedSearch.objects.select_related('user').all()
+        for s in searches:
+            if _dog_matches_params(instance, s.params):
+                if s.user.email:
+                    send_mail(
+                        subject=f"New dog matches your search: {instance.name}",
+                        message=f"{instance.name} ({instance.breed}) in {instance.location} for ${instance.price}. View: {settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else 'localhost'}{instance.get_absolute_url()}",
+                        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                        recipient_list=[s.user.email],
+                        fail_silently=True,
+                    )
+    except Exception:
+        pass
