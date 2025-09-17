@@ -172,15 +172,16 @@
                 <!-- Action Buttons -->
                 <div class="flex space-x-4">
                     {% if user.is_authenticated and not user.is_seller %}
-                    <a href="{% url 'messaging:send_message' accessory.seller.pk %}" 
+                    <a href="{% url 'messaging:start_conversation' accessory.seller.pk %}" 
                        class="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition duration-300 text-center">
                         <i class="fas fa-envelope mr-2"></i> Contact Seller
                     </a>
                     <button 
                         data-fav-url="{% url 'accessories:toggle_favorite' accessory.pk %}"
-                        class="js-acc-fav-toggle bg-gray-100 text-gray-700 px-4 py-3 rounded-lg font-semibold hover:bg-gray-200 transition duration-300"
+                        class="js-acc-fav-toggle px-4 py-3 rounded-lg font-semibold transition duration-300 {% if is_favorited %}bg-red-100 text-red-600{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
                         aria-label="Toggle favorite">
-                        <i class="fas fa-heart"></i>
+                        <i class="fas fa-heart mr-2"></i>
+                        <span class="js-acc-fav-count text-sm">{{ accessory.favorited_by.count }}</span>
                     </button>
                     {% elif not user.is_authenticated %}
                     <a href="{% url 'accounts:login' %}" 
