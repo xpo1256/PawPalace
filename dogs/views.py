@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db.models import Q, Count
@@ -301,6 +302,7 @@ def create_order(request, pk):
 
 
 @login_required
+@require_POST
 def accept_order(request, order_id):
     order = get_object_or_404(Order, id=order_id, status='pending')
     # Only the seller of the dog can accept
@@ -314,6 +316,7 @@ def accept_order(request, order_id):
 
 
 @login_required
+@require_POST
 def decline_order(request, order_id):
     order = get_object_or_404(Order, id=order_id, status='pending')
     if request.user != order.dog.seller:
@@ -326,6 +329,7 @@ def decline_order(request, order_id):
 
 
 @login_required
+@require_POST
 def cancel_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     # Buyer can cancel when pending or confirmed; seller can also cancel if needed
@@ -342,6 +346,7 @@ def cancel_order(request, order_id):
 
 
 @login_required
+@require_POST
 def complete_order(request, order_id):
     order = get_object_or_404(Order, id=order_id, status='confirmed')
     # Only seller can mark completed

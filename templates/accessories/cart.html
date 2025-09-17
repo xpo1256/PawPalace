@@ -57,9 +57,15 @@
             <span class="font-semibold">${{ total|floatformat:2 }}</span>
           </div>
           <p class="text-xs text-gray-400 mb-4">Taxes and shipping are calculated with the seller.</p>
-          <a href="{% url 'messaging:start_conversation' user.pk %}" class="w-full inline-flex justify-center items-center px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
-            <i class="fas fa-comments mr-2"></i> Contact Seller to Checkout
-          </a>
+          {% if items %}
+            <div class="space-y-2">
+              {% for item in items %}
+              <a href="{% url 'messaging:start_conversation' item.accessory.seller.pk %}" class="w-full inline-flex justify-center items-center px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                <i class="fas fa-comments mr-2"></i> Contact {{ item.accessory.seller.first_name|default:'Seller' }} for "{{ item.accessory.name }}"
+              </a>
+              {% endfor %}
+            </div>
+          {% endif %}
           <p class="text-xs text-gray-500 mt-3">We’ll open messaging so you can finalize the purchase with the seller.</p>
         </div>
       </div>

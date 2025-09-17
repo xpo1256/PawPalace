@@ -171,9 +171,12 @@
                                             <i class="fas fa-handshake mr-2"></i>Confirmed - Arrange Pickup
                                         {% endif %}
                                     </button>
-                                    <a href="{% url 'dogs:cancel_order' order.id %}" class="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300 text-center">
-                                        <i class="fas fa-ban mr-2"></i>Cancel Order
-                                    </a>
+                                    <form method="post" action="{% url 'dogs:cancel_order' order.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300 text-center">
+                                            <i class="fas fa-ban mr-2"></i>Cancel Order
+                                        </button>
+                                    </form>
                                 {% elif order.status == 'confirmed' %}
                                     
                                 {% elif order.status == 'completed' %}
