@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders - PawPalace{% endblock %}
+
+{% block content %}
+<!-- Seller Restriction -->
+{% if user.is_seller %}
+<div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 text-center">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-store text-red-600 text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Sellers Cannot Place Orders</h2>
+            <p class="text-gray-600 mb-6">
+                As a seller, you cannot purchase dogs from other sellers. 
+                You can only sell your own dogs and manage orders for your listings.
+            </p>
+            <div class="space-y-3">
+                <a href="{% url 'accounts:seller_orders' %}" 
+                   class="w-full bg-green-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-600 transition duration-300 inline-block">
+                    <i class="fas fa-clipboard-list mr-2"></i>
+                    View Orders for My Dogs
+                </a>
+                <a href="{% url 'dogs:add' %}" 
+                   class="w-full bg-primary-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-primary-600 transition duration-300 inline-block">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Add New Dog
+                </a>
+                <a href="{% url 'accounts:dashboard' %}" 
+                   class="w-full bg-gray-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-600 transition duration-300 inline-block">
+                    <i class="fas fa-tachometer-alt mr-2"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+            <i class="fas fa-shopping-cart mr-3"></i>
+            My Orders
+        </h1>
+        <p class="text-xl text-blue-100 max-w-2xl mx-auto">
+            Track all your dog purchases and order history
+        </p>
+    </div>
+</section>
+
+<!-- Orders Content -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Filter Tabs -->
+        <div class="mb-8">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8">
+                    <a href="?status=all" 
+                       class="{% if request.GET.status == 'all' or not request.GET.status %}border-primary-500 text-primary-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        <i class="fas fa-list mr-2"></i>All Orders
+                    </a>
+                    <a href="?status=pending" 
+                       class="{% if request.GET.status == 'pending' %}border-yellow-500 text-yellow-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        <i class="fas fa-clock mr-2"></i>Pending
+                    </a>
+                    <a href="?status=confirmed" 
+                       class="{% if request.GET.status == 'confirmed' %}border-green-500 text-green-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        <i class="fas fa-check mr-2"></i>Confirmed
+                    </a>
+                    <a href="?status=completed" 
+                       class="{% if request.GET.status == 'completed' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        <i class="fas fa-check-circle mr-2"></i>Completed
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        {% if orders %}
+            <!-- Orders List -->
+            <div class="space-y-6">
+                {% for order in orders %}
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-start space-x-4">
+                                    <!-- Dog Image -->
+                                    <div class="flex-shrink-0">
+                                        <img src="{{ order.dog.image.url }}" 
+                                             alt="{{ order.dog.name }}" 
+                                             class="w-20 h-20 rounded-lg object-cover">
+                                    </div>
+                                    
+                                    <!-- Order Details -->
+                                    <div class="flex-1">
+                                        <h3 class="text-xl font-bold text-gray-900 mb-2">{{ order.dog.name }}</h3>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                                            <div>
+                                                <p><strong>Breed:</strong> {{ order.dog.breed }}</p>
+                                                <p><strong>Age:</strong> {{ order.dog.age_display }}</p>
+                                                <p><strong>Gender:</strong> {{ order.dog.get_gender_display }}</p>
+                                            </div>
+                                            <div>
+                                                <p><strong>Seller:</strong> {{ order.dog.seller.full_name }}</p>
+                                                <p><strong>Location:</strong> {{ order.dog.location }}</p>
+                                                <p><strong>Order Date:</strong> {{ order.created_at|date:"M d, Y" }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Order Status & Price -->
+                                <div class="text-right">
+                                    <div class="mb-2">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                            {% if order.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                            {% elif order.status == 'confirmed' %}bg-green-100 text-green-800
+                                            {% elif order.status == 'completed' %}bg-blue-100 text-blue-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {% if order.status == 'pending' %}
+                                                <i class="fas fa-clock mr-1"></i>Pending
+                                            {% elif order.status == 'confirmed' %}
+                                                <i class="fas fa-check mr-1"></i>Confirmed
+                                            {% elif order.status == 'completed' %}
+                                                <i class="fas fa-check-circle mr-1"></i>Completed
+                                            {% else %}
+                                                <i class="fas fa-times mr-1"></i>{{ order.get_status_display }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="text-2xl font-bold text-gray-900">${{ order.dog.price }}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Health Information -->
+                            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                <h4 class="font-semibold text-gray-900 mb-2">Health Information</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    {% if order.dog.is_vaccinated %}
+                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                                            <i class="fas fa-shield-alt mr-1"></i>Vaccinated
+                                        </span>
+                                    {% endif %}
+                                    {% if order.dog.is_neutered %}
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                                            <i class="fas fa-check-circle mr-1"></i>Neutered
+                                        </span>
+                                    {% endif %}
+                                    <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
+                                        <i class="fas fa-heartbeat mr-1"></i>{{ order.dog.get_health_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <a href="{{ order.dog.get_absolute_url }}" 
+                                   class="flex-1 bg-primary-500 text-white text-center py-2 px-4 rounded-lg hover:bg-primary-600 transition duration-300">
+                                    <i class="fas fa-eye mr-2"></i>View Dog Details
+                                </a>
+                                <a href="{% url 'messaging:inbox' %}" 
+                                   class="flex-1 bg-green-500 text-white text-center py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300">
+                                    <i class="fas fa-envelope mr-2"></i>Contact Seller
+                                </a>
+                                {% if order.status == 'pending' %}
+                                    <button class="flex-1 bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition duration-300">
+                                        <i class="fas fa-clock mr-2"></i>Waiting for Confirmation
+                                    </button>
+                                {% elif order.status == 'confirmed' %}
+                                    <button class="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300">
+                                        <i class="fas fa-handshake mr-2"></i>Arrange Pickup
+                                    </button>
+                                {% elif order.status == 'completed' %}
+                                    <button class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-lg cursor-not-allowed">
+                                        <i class="fas fa-check-circle mr-2"></i>Order Completed
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <div class="mt-8 flex justify-center">
+                    <nav class="flex items-center space-x-2">
+                        {% if page_obj.has_previous %}
+                            <a href="?page=1" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                            <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 hover:bg-gray-50">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        {% endif %}
+                        
+                        <span class="px-3 py-2 text-sm font-medium text-gray-700 bg-primary-50 border border-primary-300">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 hover:bg-gray-50">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            {% endif %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-16">
+                <div class="mb-6">
+                    <i class="fas fa-shopping-cart text-6xl text-gray-300"></i>
+                </div>
+                <h3 class="text-2xl font-semibold text-gray-500 mb-4">No Orders Yet</h3>
+                <p class="text-gray-400 mb-8 max-w-md mx-auto">
+                    You haven't placed any orders yet. Start browsing our adorable dogs and find your perfect companion!
+                </p>
+                <a href="{% url 'dogs:list' %}" 
+                   class="bg-primary-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-primary-600 transition duration-300 inline-block">
+                    <i class="fas fa-search mr-2"></i>
+                    Browse Dogs
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Order Tips Section -->
+{% if orders %}
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-gradient-to-r from-green-500 to-blue-600 rounded-2xl p-8 text-white">
+                <div class="flex items-start space-x-4">
+                    <div class="bg-white bg-opacity-20 p-3 rounded-lg">
+                        <i class="fas fa-lightbulb text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4">Order Tips</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                            <div>
+                                <h4 class="font-medium mb-2">Before Meeting:</h4>
+                                <ul class="space-y-1">
+                                    <li><i class="fas fa-check text-green-300 mr-2"></i>Verify health records and vaccination status</li>
+                                    <li><i class="fas fa-check text-green-300 mr-2"></i>Ask about the dog's temperament and training</li>
+                                    <li><i class="fas fa-check text-green-300 mr-2"></i>Arrange a safe meeting location</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">After Purchase:</h4>
+                                <ul class="space-y-1">
+                                    <li><i class="fas fa-check text-green-300 mr-2"></i>Schedule a vet visit within the first week</li>
+                                    <li><i class="fas fa-check text-green-300 mr-2"></i>Update microchip information if applicable</li>
+                                    <li><i class="fas fa-check text-green-300 mr-2"></i>Keep all health records and documentation</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ dog.name }} - PawPalace{% endblock %}
+
+{% block content %}
+<!-- Dog Detail Section -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Dog Images -->
+            <div class="space-y-4">
+                <div class="aspect-w-16 aspect-h-12 bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <img src="{{ dog.image.url }}" alt="{{ dog.name }}" 
+                         class="w-full h-96 object-cover">
+                </div>
+                
+                <!-- Image Gallery (if multiple images) -->
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="aspect-w-1 aspect-h-1 bg-white rounded-lg shadow overflow-hidden">
+                        <img src="{{ dog.image.url }}" alt="{{ dog.name }}" 
+                             class="w-full h-20 object-cover">
+                    </div>
+                    <!-- Add more images here if needed -->
+                </div>
+            </div>
+            
+            <!-- Dog Information -->
+            <div class="space-y-6">
+                <!-- Header -->
+                <div>
+                    <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ dog.name }}</h1>
+                    <div class="flex items-center space-x-4 mb-4">
+                        <span class="text-3xl font-bold text-primary-500">${{ dog.price }}</span>
+                        {% if dog.status == 'available' %}
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                <i class="fas fa-check-circle mr-1"></i>Available
+                            </span>
+                        {% elif dog.status == 'pending' %}
+                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                <i class="fas fa-clock mr-1"></i>Pending
+                            </span>
+                        {% else %}
+                            <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                <i class="fas fa-times mr-1"></i>Sold
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Basic Info -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Basic Information</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <span class="text-gray-600">Breed:</span>
+                            <span class="font-semibold text-gray-900">{{ dog.breed }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Age:</span>
+                            <span class="font-semibold text-gray-900">{{ dog.age_display }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Gender:</span>
+                            <span class="font-semibold text-gray-900">{{ dog.get_gender_display }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Location:</span>
+                            <span class="font-semibold text-gray-900">{{ dog.location }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Health Information -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Health Information</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Health Status:</span>
+                            <span class="font-semibold text-gray-900">{{ dog.get_health_status_display }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Vaccinated:</span>
+                            {% if dog.is_vaccinated %}
+                                <span class="text-green-600 font-semibold">
+                                    <i class="fas fa-check-circle mr-1"></i>Yes
+                                </span>
+                            {% else %}
+                                <span class="text-red-600 font-semibold">
+                                    <i class="fas fa-times-circle mr-1"></i>No
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Neutered:</span>
+                            {% if dog.is_neutered %}
+                                <span class="text-green-600 font-semibold">
+                                    <i class="fas fa-check-circle mr-1"></i>Yes
+                                </span>
+                            {% else %}
+                                <span class="text-red-600 font-semibold">
+                                    <i class="fas fa-times-circle mr-1"></i>No
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Description -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Description</h2>
+                    <p class="text-gray-700 leading-relaxed">{{ dog.description|linebreaks }}</p>
+                </div>
+                
+                <!-- Seller Information -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Seller Information</h2>
+                    <div class="flex items-center space-x-4">
+                        {% if dog.seller.profile_image %}
+                            <img src="{{ dog.seller.profile_image.url }}" 
+                                 alt="{{ dog.seller.full_name }}" 
+                                 class="w-16 h-16 rounded-full object-cover">
+                        {% else %}
+                            <div class="w-16 h-16 rounded-full bg-primary-500 flex items-center justify-center">
+                                <i class="fas fa-user text-white text-2xl"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">{{ dog.seller.full_name }}</h3>
+                            <p class="text-gray-600">{{ dog.seller.location|default:"Location not specified" }}</p>
+                            <div class="flex items-center space-x-2 mt-2">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-store mr-1"></i> Seller
+                                </span>
+                                {% if dog.seller.is_verified %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        <i class="fas fa-check-circle mr-1"></i> Verified
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="space-y-4">
+                    {% if user.is_authenticated %}
+                        {% if user == dog.seller %}
+                            <!-- Owner Actions -->
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-info-circle text-yellow-600 mr-2"></i>
+                                    <span class="text-yellow-800 font-medium">This is your dog listing</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <a href="{% url 'dogs:edit' dog.pk %}" 
+                                   class="bg-blue-500 text-white text-center py-3 px-6 rounded-lg font-semibold hover:bg-blue-600 transition duration-300">
+                                    <i class="fas fa-edit mr-2"></i>Edit Dog
+                                </a>
+                                <a href="{% url 'dogs:delete' dog.pk %}" 
+                                   class="bg-red-500 text-white text-center py-3 px-6 rounded-lg font-semibold hover:bg-red-600 transition duration-300">
+                                    <i class="fas fa-trash mr-2"></i>Delete Dog
+                                </a>
+                            </div>
+                        {% elif user.is_seller %}
+                            <!-- Seller viewing other seller's dog -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                                    <span class="text-blue-800 font-medium">As a seller, you can only view other dogs. You cannot purchase or favorite them.</span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- Buyer Actions -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {% if dog.status == 'available' %}
+                                    <a href="{% url 'dogs:create_order' dog.pk %}" 
+                                       class="bg-primary-500 text-white text-center py-3 px-6 rounded-lg font-semibold hover:bg-primary-600 transition duration-300">
+                                        <i class="fas fa-shopping-cart mr-2"></i>Buy Now
+                                    </a>
+                                    <a href="{% url 'messaging:send_message' dog.pk %}" 
+                                       class="bg-green-500 text-white text-center py-3 px-6 rounded-lg font-semibold hover:bg-green-600 transition duration-300">
+                                        <i class="fas fa-envelope mr-2"></i>Contact Seller
+                                    </a>
+                                {% else %}
+                                    <div class="bg-gray-100 text-gray-500 text-center py-3 px-6 rounded-lg font-semibold">
+                                        <i class="fas fa-times mr-2"></i>Not Available
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Favorite Button -->
+                            <button onclick="toggleFavorite({{ dog.pk }})" 
+                                    class="w-full bg-red-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-600 transition duration-300"
+                                    id="favorite-btn-{{ dog.pk }}">
+                                <i class="fas fa-heart mr-2"></i>
+                                <span id="favorite-text-{{ dog.pk }}">
+                                    {% if is_favorited %}Remove from Favorites{% else %}Add to Favorites{% endif %}
+                                </span>
+                            </button>
+                            
+                            <!-- Share Button -->
+                            <button class="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-200 transition duration-300"
+                                    data-share-dog
+                                    data-dog-name="{{ dog.name }}"
+                                    data-dog-url="{{ request.scheme }}://{{ request.get_host }}{{ dog.get_absolute_url }}"
+                                    data-dog-price="{{ dog.price }}"
+                                    data-dog-breed="{{ dog.breed }}">
+                                <i class="fas fa-share-alt mr-2"></i>Share This Dog
+                            </button>
+                        {% endif %}
+                    {% else %}
+                        <!-- Not logged in -->
+                        <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Want to buy this dog?</h3>
+                                    <p class="text-gray-600 text-sm">Sign in to purchase or contact the seller</p>
+                                </div>
+                                <a href="{% url 'accounts:login' %}" 
+                                   class="bg-primary-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-600 transition duration-300">
+                                    Sign In
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Similar Dogs Section -->
+{% if similar_dogs %}
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">
+                Similar {{ dog.breed }}s
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for similar_dog in similar_dogs %}
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
+                        <img src="{{ similar_dog.image.url }}" alt="{{ similar_dog.name }}" 
+                             class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <h3 class="font-semibold text-gray-900 mb-2">{{ similar_dog.name }}</h3>
+                            <p class="text-gray-600 text-sm mb-2">{{ similar_dog.age_display }} • {{ similar_dog.get_gender_display }}</p>
+                            <p class="text-primary-500 font-bold">${{ similar_dog.price }}</p>
+                            <a href="{{ similar_dog.get_absolute_url }}" 
+                               class="mt-3 block bg-primary-500 text-white text-center py-2 px-4 rounded-lg hover:bg-primary-600 transition duration-300">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% endif %}
+
+<!-- JavaScript -->
+<script>
+    function toggleFavorite(dogId) {
+        fetch(`/dogs/${dogId}/favorite/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            
+            const btn = document.getElementById(`favorite-btn-${dogId}`);
+            const text = document.getElementById(`favorite-text-${dogId}`);
+            
+            if (data.is_favorited) {
+                btn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                btn.classList.add('bg-green-500', 'hover:bg-green-600');
+                text.textContent = 'Remove from Favorites';
+            } else {
+                btn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                btn.classList.add('bg-red-500', 'hover:bg-red-600');
+                text.textContent = 'Add to Favorites';
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+
+<!-- Share functionality -->
+<script src="{% static 'js/share.js' %}"></script>
+{% endblock %}

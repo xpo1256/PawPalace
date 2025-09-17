@@ -1,0 +1,58 @@
+                    <div class="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden shadow-lg group-hover:scale-110 transition duration-300">
+                        {% if breed.name|lower == 'pomeranian' %}
+                            <img src="https://images.unsplash.com/photo-1718060727839-0914033994f9?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'golden retriever' %}
+                            <img src="https://images.unsplash.com/photo-1694819671756-01de7273a3fd?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'labrador' %}
+                            <img src="https://images.unsplash.com/photo-1683134036144-82b0a3d50f11?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'german shepherd' %}
+                            <img src="https://images.unsplash.com/photo-1664285638623-52bac65f8d7a?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'french bulldog' %}
+                            <img src="https://images.unsplash.com/photo-1661962699932-1948aa1dde16?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'bulldog' %}
+                            <img src="https://images.unsplash.com/photo-1661962699932-1948aa1dde16?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'poodle' %}
+                            <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'beagle' %}
+                            <img src="https://images.unsplash.com/photo-1683134036144-82b0a3d50f11?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'rottweiler' %}
+                            <img src="https://images.unsplash.com/photo-1664285638623-52bac65f8d7a?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'siberian husky' %}
+                            <img src="https://images.unsplash.com/photo-1664285638623-52bac65f8d7a?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% else %}
+                            <!-- Default dog icon for unknown breeds -->
+                            <div class="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-2xl">
+                                <i class="fas fa-dog"></i>
+                            </div>
+                        {% endif %}
+                    </div>

@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New Dog - PawPalace{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-green-500 to-blue-600 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+            <i class="fas fa-plus-circle mr-3"></i>
+            Add New Dog
+        </h1>
+        <p class="text-xl text-green-100 max-w-2xl mx-auto">
+            List your adorable dog for sale and find them a loving home
+        </p>
+    </div>
+</section>
+
+<!-- Add Dog Form Section -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-green-50 px-8 py-6 border-b border-green-100">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-green-100 p-3 rounded-lg">
+                        <i class="fas fa-dog text-green-600 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Dog Information</h2>
+                        <p class="text-green-600">Fill in the details about your dog to create a listing</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form -->
+            <div class="p-8">
+                <form method="post" enctype="multipart/form-data" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            <i class="fas fa-info-circle text-primary-500 mr-2"></i>
+                            Basic Information
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Dog Name -->
+                            <div>
+                                <label for="id_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Dog Name *
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.name.errors %}
+                                            <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Breed -->
+                            <div>
+                                <label for="id_breed" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Breed *
+                                </label>
+                                {{ form.breed }}
+                                {% if form.breed.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.breed.errors %}
+                                            <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                            <!-- Age -->
+                            <div>
+                                <label for="id_age" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Age (months) *
+                                </label>
+                                {{ form.age }}
+                                {% if form.age.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.age.errors %}
+                                            <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Gender -->
+                            <div>
+                                <label for="id_gender" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Gender *
+                                </label>
+                                {{ form.gender }}
+                                {% if form.gender.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.gender.errors %}
+                                            <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Price -->
+                            <div>
+                                <label for="id_price" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Price ($) *
+                                </label>
+                                {{ form.price }}
+                                {% if form.price.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.price.errors %}
+                                            <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Location and Description -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            <i class="fas fa-map-marker-alt text-primary-500 mr-2"></i>
+                            Location & Description
+                        </h3>
+                        
+                        <div class="space-y-6">
+                            <!-- Location -->
+                            <div>
+                                <label for="id_location" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Location *
+                                </label>
+                                {{ form.location }}
+                                <div class="mt-2 text-sm text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    City, State (e.g., "New York, NY")
+                                </div>
+                                {% if form.location.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.location.errors %}
+                                            <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Description -->
+                            <div>
+                                <label for="id_description" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Description *
+                                </label>
+                                {{ form.description }}
+                                <div class="mt-2 text-sm text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Tell potential buyers about your dog's personality, training, and special characteristics
+                                </div>
+                                {% if form.description.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.description.errors %}
+                                            <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Health Information -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            <i class="fas fa-heartbeat text-primary-500 mr-2"></i>
+                            Health Information
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Health Status -->
+                            <div>
+                                <label for="id_health_status" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Health Status *
+                                </label>
+                                {{ form.health_status }}
+                                {% if form.health_status.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.health_status.errors %}
+                                            <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Vaccination Status -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Vaccination Status
+                                </label>
+                                <div class="flex items-center space-x-4">
+                                    <label class="flex items-center">
+                                        {{ form.is_vaccinated }}
+                                        <span class="ml-2 text-sm text-gray-700">Vaccinated</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Other Health Information
+                            </label>
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center">
+                                    {{ form.is_neutered }}
+                                    <span class="ml-2 text-sm text-gray-700">Neutered/Spayed</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Image Upload -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            <i class="fas fa-camera text-primary-500 mr-2"></i>
+                            Dog Photo
+                        </h3>
+                        
+                        <div>
+                            <label for="id_image" class="block text-sm font-medium text-gray-700 mb-2">
+                                Upload Photo *
+                            </label>
+                            {{ form.image }}
+                            <div class="mt-2 text-sm text-gray-500">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Upload a clear, high-quality photo of your dog. This will be the main image for your listing.
+                            </div>
+                            {% if form.image.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.image.errors %}
+                                        <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                        <button type="submit" 
+                                class="flex-1 bg-green-500 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-300 transform hover:scale-105">
+                            <i class="fas fa-plus-circle mr-2"></i>
+                            Add Dog Listing
+                        </button>
+                        <a href="{% url 'accounts:dashboard' %}" 
+                           class="flex-1 bg-gray-100 text-gray-700 py-4 px-6 rounded-lg font-semibold text-lg text-center hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-300">
+                            <i class="fas fa-times mr-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Tips Section -->
+        <div class="mt-8 bg-blue-50 rounded-2xl p-8">
+            <h3 class="text-xl font-semibold text-blue-900 mb-4">
+                <i class="fas fa-lightbulb text-blue-600 mr-2"></i>
+                Tips for a Great Listing
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-blue-800 text-sm">
+                <div>
+                    <h4 class="font-medium mb-2">Photos:</h4>
+                    <ul class="space-y-1">
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Use natural lighting for best results</li>
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Show your dog's face clearly</li>
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Include photos showing their personality</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-medium mb-2">Description:</h4>
+                    <ul class="space-y-1">
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Mention their temperament and energy level</li>
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Include any training or special skills</li>
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Be honest about their health and behavior</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

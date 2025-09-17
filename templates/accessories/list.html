@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dog Accessories - Dog Marketplace{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-4xl font-bold mb-4">
+                <i class="fas fa-shopping-bag mr-3"></i>
+                Dog Accessories
+            </h1>
+            <p class="text-xl text-primary-100 max-w-3xl mx-auto">
+                Find everything your furry friend needs - from premium food to fun toys and essential accessories.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Search and Filter Section -->
+<section class="py-8 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <form method="GET" class="bg-white rounded-xl shadow-lg p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                    {{ search_form.query }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    {{ search_form.category }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Min Price</label>
+                    {{ search_form.min_price }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Max Price</label>
+                    {{ search_form.max_price }}
+                </div>
+            </div>
+            <div class="mt-4 flex justify-between items-center">
+                <button type="submit" class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition duration-300">
+                    <i class="fas fa-search mr-2"></i> Search
+                </button>
+                <a href="{% url 'accessories:list' %}" class="text-gray-600 hover:text-primary-600 transition duration-300">
+                    <i class="fas fa-times mr-2"></i> Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Accessories Grid -->
+<section class="py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {% if accessories %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {% for accessory in accessories %}
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
+                    <div class="aspect-w-16 aspect-h-12 bg-gray-200">
+                        {% if accessory.primary_image %}
+                            <img src="{{ accessory.primary_image.url }}" 
+                                 alt="{{ accessory.name }}" 
+                                 class="w-full h-48 object-cover group-hover:scale-105 transition duration-300">
+                        {% else %}
+                            <!-- Realistic images based on accessory name -->
+                            {% if 'food' in accessory.name|lower or 'chicken' in accessory.name|lower or 'rice' in accessory.name|lower %}
+                                <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=300&fit=crop" 
+                                     alt="{{ accessory.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% elif 'toy' in accessory.name|lower or 'puzzle' in accessory.name|lower %}
+                                <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop" 
+                                     alt="{{ accessory.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% elif 'bed' in accessory.name|lower or 'comfort' in accessory.name|lower %}
+                                <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=300&fit=crop" 
+                                     alt="{{ accessory.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% elif 'grooming' in accessory.name|lower or 'health' in accessory.name|lower %}
+                                <img src="https://images.unsplash.com/photo-1612835362596-845cfdfe9d36?w=400&h=300&fit=crop" 
+                                     alt="{{ accessory.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% elif 'collar' in accessory.name|lower or 'safety' in accessory.name|lower %}
+                                <img src="https://images.unsplash.com/photo-1601758228059-0c3bb6e76d4c?w=400&h=300&fit=crop" 
+                                     alt="{{ accessory.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% elif 'raincoat' in accessory.name|lower or 'clothing' in accessory.name|lower %}
+                                <img src="https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400&h=300&fit=crop" 
+                                     alt="{{ accessory.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% else %}
+                                <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop" 
+                                     alt="{{ accessory.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% endif %}
+                            <!-- Fallback placeholder -->
+                            <div class="w-full h-48 bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center" style="display: none;">
+                                <i class="fas fa-paw text-white text-4xl"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                                {{ accessory.get_category_display }}
+                            </span>
+                            {% if accessory.brand %}
+                            <span class="text-sm text-gray-500">{{ accessory.brand }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition duration-300">
+                            {{ accessory.name }}
+                        </h3>
+                        
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                            {{ accessory.description|truncatewords:15 }}
+                        </p>
+                        
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-2xl font-bold text-primary-600">${{ accessory.price|floatformat:2 }}</span>
+                            {% if accessory.quantity > 0 %}
+                            <span class="text-sm text-green-600">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                In Stock ({{ accessory.quantity }})
+                            </span>
+                            {% else %}
+                            <span class="text-sm text-red-600">
+                                <i class="fas fa-times-circle mr-1"></i>
+                                Out of Stock
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <a href="{% url 'accessories:detail' accessory.pk %}" 
+                               class="flex-1 bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition duration-300 text-center">
+                                <i class="fas fa-eye mr-1"></i> View Details
+                            </a>
+                            {% if user.is_authenticated and not user.is_seller %}
+                            <a href="{% url 'messaging:send_message' accessory.seller.pk %}" 
+                               class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition duration-300">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-3 text-xs text-gray-500">
+                            <i class="fas fa-user mr-1"></i>
+                            Sold by {{ accessory.seller.first_name }} {{ accessory.seller.last_name }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="mt-12 flex justify-center">
+                <nav class="flex items-center space-x-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            First
+                        </a>
+                        <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            Previous
+                        </a>
+                    {% endif %}
+                    
+                    <span class="px-3 py-2 text-sm font-medium text-white bg-primary-600 border border-primary-600 rounded-md">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            Next
+                        </a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            Last
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+            {% endif %}
+            
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-16">
+                <div class="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shopping-bag text-4xl text-gray-400"></i>
+                </div>
+                <h3 class="text-2xl font-semibold text-gray-700 mb-3">No Accessories Found</h3>
+                <p class="text-gray-500 mb-8 max-w-md mx-auto">
+                    We couldn't find any accessories matching your search criteria. Try adjusting your filters or browse all accessories.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{% url 'accessories:list' %}" 
+                       class="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition duration-300">
+                        <i class="fas fa-list mr-2"></i> View All Accessories
+                    </a>
+                    <a href="{% url 'accessories:shop' %}" 
+                       class="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition duration-300">
+                        <i class="fas fa-home mr-2"></i> Back to Shop
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block title %}Start Conversation with {{ other_user.full_name }} - PawPalace{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                <i class="fas fa-comments mr-3"></i>
+                Start Conversation
+            </h1>
+            <p class="text-xl text-primary-100 max-w-2xl mx-auto">
+                Send a message to {{ other_user.full_name }}
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Conversation Form Section -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- User Information -->
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-user text-primary-500 mr-2"></i>
+                    Contact Information
+                </h2>
+                
+                <div class="flex items-center space-x-4 mb-6">
+                    {% if other_user.profile_image %}
+                        <img src="{{ other_user.profile_image.url }}" 
+                             alt="{{ other_user.full_name }}" 
+                             class="w-20 h-20 rounded-full object-cover">
+                    {% else %}
+                        <div class="w-20 h-20 rounded-full bg-primary-500 flex items-center justify-center">
+                            <i class="fas fa-user text-white text-2xl"></i>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">{{ other_user.full_name }}</h3>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                {% if other_user.is_seller %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {% if other_user.is_seller %}
+                                    <i class="fas fa-store mr-1"></i> Seller
+                                {% else %}
+                                    <i class="fas fa-heart mr-1"></i> Buyer
+                                {% endif %}
+                            </span>
+                            {% if other_user.location %}
+                                <span class="text-gray-600 text-sm">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>{{ other_user.location }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                {% if other_user.bio %}
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <h4 class="font-semibold text-gray-900 mb-2">About</h4>
+                        <p class="text-gray-700 text-sm">{{ other_user.bio }}</p>
+                    </div>
+                {% endif %}
+                
+                {% if other_user.is_seller %}
+                    <!-- Seller's Dogs -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 mb-3">
+                            <i class="fas fa-dog mr-1"></i>
+                            Available Dogs
+                        </h4>
+                        {% if other_user.dogs_for_sale.all %}
+                            <div class="space-y-3">
+                                {% for dog in other_user.dogs_for_sale.all|slice:":3" %}
+                                    <div class="flex items-center space-x-3">
+                                        <img src="{{ dog.image.url }}" alt="{{ dog.name }}" 
+                                             class="w-12 h-12 rounded-lg object-cover">
+                                        <div class="flex-1">
+                                            <div class="font-medium text-gray-900">{{ dog.name }}</div>
+                                            <div class="text-sm text-gray-600">{{ dog.breed }} - ${{ dog.price }}</div>
+                                        </div>
+                                        <a href="{{ dog.get_absolute_url }}" 
+                                           class="text-primary-600 hover:text-primary-500 text-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if other_user.dogs_for_sale.all.count > 3 %}
+                                <div class="mt-3 text-center">
+                                    <a href="{% url 'dogs:list' %}?seller={{ other_user.id }}" 
+                                       class="text-primary-600 hover:text-primary-500 text-sm font-medium">
+                                        View all {{ other_user.dogs_for_sale.all.count }} dogs
+                                        <i class="fas fa-arrow-right ml-1"></i>
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-gray-600 text-sm">No dogs currently listed</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Message Form -->
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-paper-plane text-primary-500 mr-2"></i>
+                    Send Message
+                </h2>
+                
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <!-- Subject -->
+                    <div>
+                        <label for="id_subject" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-tag mr-1"></i> Subject (Optional)
+                        </label>
+                        {{ form.subject }}
+                        {% if form.subject.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.subject.errors %}
+                                    <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Message Content -->
+                    <div>
+                        <label for="id_content" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-comment mr-1"></i> Your Message *
+                        </label>
+                        {{ form.content }}
+                        {% if form.content.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.content.errors %}
+                                    <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="mt-2 text-sm text-gray-500">
+                            <i class="fas fa-lightbulb mr-1"></i>
+                            Be clear about your interest and any questions you have.
+                        </div>
+                    </div>
+                    
+                    <!-- Message Templates -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-blue-900 mb-3">
+                            <i class="fas fa-magic mr-1"></i>
+                            Quick Templates
+                        </h3>
+                        <div class="space-y-2">
+                            <button type="button" onclick="useTemplate('general')" 
+                                    class="block w-full text-left text-sm text-blue-700 hover:text-blue-900 hover:bg-blue-100 p-2 rounded transition duration-300">
+                                <i class="fas fa-comment-dots mr-2"></i>
+                                General inquiry about your dogs
+                            </button>
+                            {% if other_user.is_seller %}
+                                <button type="button" onclick="useTemplate('seller')" 
+                                        class="block w-full text-left text-sm text-blue-700 hover:text-blue-900 hover:bg-blue-100 p-2 rounded transition duration-300">
+                                    <i class="fas fa-store mr-2"></i>
+                                    Interested in your available dogs
+                                </button>
+                            {% else %}
+                                <button type="button" onclick="useTemplate('buyer')" 
+                                        class="block w-full text-left text-sm text-blue-700 hover:text-blue-900 hover:bg-blue-100 p-2 rounded transition duration-300">
+                                    <i class="fas fa-heart mr-2"></i>
+                                    Connect as fellow dog lover
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button type="submit" 
+                                class="flex-1 bg-primary-500 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition duration-300 transform hover:scale-105">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            Start Conversation
+                        </button>
+                        <a href="{% url 'messaging:inbox' %}" 
+                           class="flex-1 bg-gray-100 text-gray-700 py-4 px-6 rounded-lg font-semibold text-lg text-center hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-300">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Back to Messages
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Community Guidelines -->
+        <div class="mt-8 bg-green-50 border border-green-200 rounded-xl p-6">
+            <div class="flex items-start space-x-4">
+                <div class="bg-green-100 p-3 rounded-lg">
+                    <i class="fas fa-users text-green-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-green-800 mb-2">Community Guidelines</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-green-700 text-sm">
+                        <div>
+                            <h4 class="font-medium mb-1">Do:</h4>
+                            <ul class="space-y-1">
+                                <li><i class="fas fa-check text-green-600 mr-2"></i>Be respectful and courteous</li>
+                                <li><i class="fas fa-check text-green-600 mr-2"></i>Ask relevant questions</li>
+                                <li><i class="fas fa-check text-green-600 mr-2"></i>Respond promptly to messages</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-medium mb-1">Don't:</h4>
+                            <ul class="space-y-1">
+                                <li><i class="fas fa-times text-red-600 mr-2"></i>Send spam or irrelevant messages</li>
+                                <li><i class="fas fa-times text-red-600 mr-2"></i>Use inappropriate language</li>
+                                <li><i class="fas fa-times text-red-600 mr-2"></i>Share personal information publicly</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Message Templates Script -->
+<script>
+    function useTemplate(type) {
+        const contentTextarea = document.getElementById('id_content');
+        const subjectInput = document.getElementById('id_subject');
+        
+        let subject = '';
+        let content = '';
+        
+        switch(type) {
+            case 'general':
+                subject = 'Hello from PawPalace!';
+                content = `Hi {{ other_user.first_name }},
+
+I hope this message finds you well. I came across your profile on PawPalace and wanted to reach out.
+
+I'd love to connect and learn more about your experience with dogs. 
+
+Looking forward to hearing from you!
+
+Best regards`;
+                break;
+                
+            case 'seller':
+                subject = 'Interested in Your Dogs';
+                content = `Hi {{ other_user.first_name }},
+
+I hope this message finds you well. I've been browsing your dog listings on PawPalace and I'm very interested in learning more.
+
+Could you please tell me more about the dogs you currently have available? I'm particularly interested in:
+- Their temperament and personality
+- Health and vaccination status
+- Any training they've received
+
+I'm looking for a loving companion for my family and would appreciate any additional information you can share.
+
+Thank you for your time, and I look forward to hearing from you!
+
+Best regards`;
+                break;
+                
+            case 'buyer':
+                subject = 'Fellow Dog Lover';
+                content = `Hi {{ other_user.first_name }},
+
+I hope this message finds you well. I noticed we're both part of the PawPalace community and thought it would be great to connect.
+
+As a fellow dog lover, I'd love to chat about our shared passion for these amazing animals. 
+
+Looking forward to connecting!
+
+Best regards`;
+                break;
+        }
+        
+        subjectInput.value = subject;
+        contentTextarea.value = content;
+        
+        // Auto-resize textarea
+        contentTextarea.style.height = 'auto';
+        contentTextarea.style.height = (contentTextarea.scrollHeight) + 'px';
+    }
+    
+    // Auto-resize textarea on input
+    document.addEventListener('DOMContentLoaded', function() {
+        const textarea = document.getElementById('id_content');
+        if (textarea) {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        }
+    });
+</script>
+{% endblock %}

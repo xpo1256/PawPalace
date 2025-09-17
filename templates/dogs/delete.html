@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete {{ dog.name }} - PawPalace{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-red-500 to-pink-600 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+            <i class="fas fa-trash mr-3"></i>
+            Delete Dog Listing
+        </h1>
+        <p class="text-xl text-red-100 max-w-2xl mx-auto">
+            Are you sure you want to remove this dog from your listings?
+        </p>
+    </div>
+</section>
+
+<!-- Delete Confirmation Section -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-red-50 px-8 py-6 border-b border-red-100">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-red-100 p-3 rounded-lg">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Confirm Deletion</h2>
+                        <p class="text-red-600">This action cannot be undone</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dog Information -->
+            <div class="p-8">
+                <div class="flex items-start space-x-6 mb-8">
+                    <img src="{{ dog.image.url }}" alt="{{ dog.name }}" 
+                         class="w-32 h-32 rounded-lg object-cover">
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ dog.name }}</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                            <div>
+                                <p><strong>Breed:</strong> {{ dog.breed }}</p>
+                                <p><strong>Age:</strong> {{ dog.age_display }}</p>
+                                <p><strong>Gender:</strong> {{ dog.get_gender_display }}</p>
+                            </div>
+                            <div>
+                                <p><strong>Price:</strong> ${{ dog.price }}</p>
+                                <p><strong>Location:</strong> {{ dog.location }}</p>
+                                <p><strong>Status:</strong> {{ dog.get_status_display }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Warning Message -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
+                    <div class="flex items-start">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 text-xl mr-3 mt-1"></i>
+                        <div>
+                            <h4 class="text-lg font-semibold text-yellow-800 mb-2">Warning: This action is permanent</h4>
+                            <ul class="text-yellow-700 space-y-1">
+                                <li>• This dog listing will be permanently removed from the marketplace</li>
+                                <li>• All associated messages and conversations will be deleted</li>
+                                <li>• Any pending orders for this dog will be cancelled</li>
+                                <li>• This action cannot be undone</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Statistics -->
+                <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Listing Statistics</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-primary-500">{{ dog.views_count }}</div>
+                            <div class="text-sm text-gray-600">Total Views</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-red-500">{{ dog.favorited_by.count }}</div>
+                            <div class="text-sm text-gray-600">Favorites</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-500">{{ dog.created_at|timesince }}</div>
+                            <div class="text-sm text-gray-600">Listed</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <form method="post" class="flex-1">
+                        {% csrf_token %}
+                        <button type="submit" 
+                                class="w-full bg-red-500 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-300 transform hover:scale-105">
+                            <i class="fas fa-trash mr-2"></i>
+                            Yes, Delete This Dog
+                        </button>
+                    </form>
+                    <a href="{{ dog.get_absolute_url }}" 
+                       class="flex-1 bg-gray-100 text-gray-700 py-4 px-6 rounded-lg font-semibold text-lg text-center hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-300">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alternative Actions -->
+        <div class="mt-8 bg-blue-50 rounded-2xl p-8">
+            <h3 class="text-xl font-semibold text-blue-900 mb-4">
+                <i class="fas fa-lightbulb text-blue-600 mr-2"></i>
+                Consider These Alternatives
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-blue-800 text-sm">
+                <div>
+                    <h4 class="font-medium mb-2">Instead of deleting:</h4>
+                    <ul class="space-y-1">
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Mark as "Sold" to keep the listing for reference</li>
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Update the price or description to attract more buyers</li>
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Add more photos to improve the listing</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-medium mb-2">If you must delete:</h4>
+                    <ul class="space-y-1">
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Make sure there are no pending orders</li>
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Inform any interested buyers first</li>
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Consider if you might want to relist later</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

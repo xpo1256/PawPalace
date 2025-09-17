@@ -1,0 +1,483 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}PawPalace - Find Your Perfect Furry Friend{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-gradient text-white py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
+                Find Your Perfect <br>
+                <span class="text-yellow-300">Furry Friend</span>
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 text-gray-200 max-w-3xl mx-auto">
+                Connect with trusted sellers and discover adorable dogs looking for their forever homes. 
+                Your new best friend is just a click away!
+            </p>
+            
+            <!-- Search Bar -->
+            <div class="max-w-4xl mx-auto bg-white rounded-full p-2 shadow-2xl">
+                <form method="GET" action="{% url 'dogs:list' %}" class="flex flex-col md:flex-row gap-2">
+                    <div class="flex-1">
+                        <input type="text" name="search" placeholder="Search by breed, name, or location..." 
+                               class="w-full px-6 py-4 text-gray-700 text-lg rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    </div>
+                    <div class="flex gap-2">
+                        <select name="breed" class="px-4 py-4 text-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">Any Breed</option>
+                            <option value="labrador">Labrador</option>
+                            <option value="golden_retriever">Golden Retriever</option>
+                            <option value="german_shepherd">German Shepherd</option>
+                            <option value="bulldog">Bulldog</option>
+                            <option value="poodle">Poodle</option>
+                            <option value="husky">Husky</option>
+                            <option value="chihuahua">Chihuahua</option>
+                        </select>
+                        <button type="submit" class="btn-gradient text-white px-8 py-4 rounded-full font-semibold hover:shadow-lg transition duration-300">
+                            <i class="fas fa-search mr-2"></i>
+                            Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-yellow-300">{{ total_dogs }}+</div>
+                    <div class="text-lg text-gray-200">Happy Dogs</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-yellow-300">{{ total_sellers }}+</div>
+                    <div class="text-lg text-gray-200">Trusted Sellers</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-yellow-300">{{ total_orders }}+</div>
+                    <div class="text-lg text-gray-200">Successful Adoptions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Dogs Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                <i class="fas fa-paw text-primary-500 mr-2"></i>
+                Available Dogs
+            </h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Meet some of our most adorable dogs looking for loving homes
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {% for dog in featured_dogs %}
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden card-hover">
+                    <div class="relative">
+                        <img src="{{ dog.image.url }}" alt="{{ dog.name }}" 
+                             class="w-full h-64 object-cover">
+                        <div class="absolute top-4 left-4">
+                            <span class="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                Available
+                            </span>
+                        </div>
+                        <div class="absolute top-4 right-4">
+                            <button class="bg-white text-red-500 p-2 rounded-full shadow-lg hover:bg-red-500 hover:text-white transition duration-300">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                        <div class="absolute bottom-4 right-4">
+                            <span class="bg-primary-500 text-white px-3 py-1 rounded-full text-lg font-bold">
+                                ${{ dog.price }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">{{ dog.name }}</h3>
+                        <p class="text-gray-600 mb-2">
+                            <i class="fas fa-dog mr-1"></i> {{ dog.breed }}
+                        </p>
+                        <p class="text-gray-600 mb-2">
+                            <i class="fas fa-birthday-cake mr-1"></i> {{ dog.age_display }}
+                        </p>
+                        <p class="text-gray-600 mb-4">
+                            <i class="fas fa-map-marker-alt mr-1"></i> {{ dog.location }}
+                        </p>
+                        <div class="flex gap-2 mb-4">
+                            {% if dog.is_vaccinated %}
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                                    <i class="fas fa-shield-alt mr-1"></i> Vaccinated
+                                </span>
+                            {% endif %}
+                            {% if dog.is_neutered %}
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                                    <i class="fas fa-check-circle mr-1"></i> Neutered
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="{{ dog.get_absolute_url }}" 
+                               class="flex-1 bg-primary-500 text-white text-center py-2 px-4 rounded-lg hover:bg-primary-600 transition duration-300">
+                                <i class="fas fa-eye mr-1"></i> View Details
+                            </a>
+                            <button class="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition duration-300"
+                                    data-share-dog
+                                    data-dog-name="{{ dog.name }}"
+                                    data-dog-url="{{ request.scheme }}://{{ request.get_host }}{{ dog.get_absolute_url }}"
+                                    data-dog-price="{{ dog.price }}"
+                                    data-dog-breed="{{ dog.breed }}">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-span-full text-center py-12">
+                    <i class="fas fa-dog text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-500 mb-2">No dogs available yet</h3>
+                    <p class="text-gray-400">Check back soon for adorable dogs looking for homes!</p>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-12">
+            <a href="{% url 'dogs:list' %}" 
+               class="bg-primary-500 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-primary-600 transition duration-300 inline-block">
+                <i class="fas fa-paw mr-2"></i>
+                View All Dogs
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                How It Works
+            </h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Finding your perfect companion has never been easier
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Step 1 -->
+            <div class="text-center">
+                <div class="bg-primary-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-search text-3xl text-primary-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-4">1. Browse & Search</h3>
+                <p class="text-gray-600">
+                    Explore our extensive collection of dogs from verified sellers. 
+                    Use our advanced filters to find exactly what you're looking for.
+                </p>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="text-center">
+                <div class="bg-primary-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-heart text-3xl text-primary-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-4">2. Connect & Meet</h3>
+                <p class="text-gray-600">
+                    Found your perfect match? Contact the seller directly through our secure messaging system 
+                    and arrange a meet-up.
+                </p>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="text-center">
+                <div class="bg-primary-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-home text-3xl text-primary-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-4">3. Welcome Home</h3>
+                <p class="text-gray-600">
+                    Complete the adoption process and welcome your new furry family member home. 
+                    Enjoy years of love and companionship!
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Breeds Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Popular Breeds
+            </h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Discover the most loved dog breeds in our marketplace
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {% for breed in popular_breeds %}
+                <a href="{% url 'dogs:list' %}?breed={{ breed.name|lower }}" 
+                   class="group text-center p-4 rounded-xl hover:bg-gray-50 transition duration-300">
+                    <div class="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden shadow-lg group-hover:scale-110 transition duration-300">
+                        {% if breed.name|lower == 'pomeranian' %}
+                            <img src="https://images.unsplash.com/photo-1626211596530-b6b676cb09e7?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'golden retriever' %}
+                            <img src="https://images.unsplash.com/photo-1687211818108-667d028f1ae4?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'labrador' %}
+                            <img src="https://images.unsplash.com/photo-1718578851384-c1d16427ec2c?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'german shepherd' %}
+                            <img src="https://images.unsplash.com/photo-1649571069618-99a265749d5b?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'french bulldog' %}
+                            <img src="https://images.unsplash.com/photo-1531842477197-54acf89bff98?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'bulldog' %}
+                            <img src="https://images.unsplash.com/photo-1718060727839-0914033994f9?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'poodle' %}
+                            <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'beagle' %}
+                            <img src="https://images.unsplash.com/photo-1551717743-49959800b1f6?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'rottweiler' %}
+                            <img src="https://images.unsplash.com/photo-1605568427561-40dd23c2acea?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif breed.name|lower == 'siberian husky' %}
+                            <img src="https://images.unsplash.com/photo-1605568427561-40dd23c2acea?w=150&h=150&fit=crop&crop=face" 
+                                 alt="{{ breed.name }}" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% else %}
+                            <!-- Default dog icon for unknown breeds -->
+                            <div class="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-2xl">
+                                <i class="fas fa-dog"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <h3 class="font-semibold text-gray-900 group-hover:text-primary-600 transition duration-300">
+                        {{ breed.name }}
+                    </h3>
+                    <p class="text-sm text-gray-500">{{ breed.count }} available</p>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-16 bg-primary-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Happy Families
+            </h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                See what our community says about their experience
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Testimonial 1 -->
+            <div class="bg-white rounded-2xl p-8 shadow-lg">
+                <div class="flex items-center mb-4">
+                    <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150" 
+                         alt="Sarah Johnson" class="w-12 h-12 rounded-full object-cover mr-4">
+                    <div>
+                        <h4 class="font-semibold text-gray-900">Sarah Johnson</h4>
+                        <div class="flex text-yellow-400">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-gray-600 italic">
+                    "Found our perfect Golden Retriever through PawPalace! The process was smooth, 
+                    and the seller was incredibly helpful. Max has been the best addition to our family!"
+                </p>
+            </div>
+            
+            <!-- Testimonial 2 -->
+            <div class="bg-white rounded-2xl p-8 shadow-lg">
+                <div class="flex items-center mb-4">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" 
+                         alt="Mike Chen" class="w-12 h-12 rounded-full object-cover mr-4">
+                    <div>
+                        <h4 class="font-semibold text-gray-900">Mike Chen</h4>
+                        <div class="flex text-yellow-400">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-gray-600 italic">
+                    "As a first-time dog owner, I was nervous about the process. The PawPalace community 
+                    was so supportive, and I found the perfect Labrador puppy for my apartment!"
+                </p>
+            </div>
+            
+            <!-- Testimonial 3 -->
+            <div class="bg-white rounded-2xl p-8 shadow-lg">
+                <div class="flex items-center mb-4">
+                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150" 
+                         alt="Emily Rodriguez" class="w-12 h-12 rounded-full object-cover mr-4">
+                    <div>
+                        <h4 class="font-semibold text-gray-900">Emily Rodriguez</h4>
+                        <div class="flex text-yellow-400">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-gray-600 italic">
+                    "Selling my puppies through PawPalace was amazing! The platform made it easy to connect 
+                    with genuine buyers who truly care about giving dogs loving homes."
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-16 hero-gradient text-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6">
+            Ready to Find Your Perfect Companion?
+        </h2>
+        <p class="text-xl text-gray-200 mb-8">
+            Join thousands of happy families who found their furry friends through PawPalace
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'dogs:list' %}" 
+               class="bg-white text-primary-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition duration-300 inline-block">
+                <i class="fas fa-search mr-2"></i>
+                Browse Dogs
+            </a>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'accounts:register' %}" 
+                   class="bg-yellow-400 text-gray-900 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-yellow-300 transition duration-300 inline-block">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    Join PawPalace
+                </a>
+            {% else %}
+                {% if user.is_seller %}
+                    <a href="{% url 'dogs:add' %}" 
+                       class="bg-yellow-400 text-gray-900 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-yellow-300 transition duration-300 inline-block">
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        Add Your Dog
+                    </a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Accessories Shop Section -->
+<section class="py-16 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold mb-4">
+                <i class="fas fa-shopping-bag mr-3"></i>
+                Dog Accessories Shop
+            </h2>
+            <p class="text-xl text-purple-100 max-w-3xl mx-auto">
+                Everything your furry friend needs! From premium food to fun toys, 
+                find the perfect accessories for your dog in our dedicated shop.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div class="text-center p-6 bg-white bg-opacity-10 rounded-xl backdrop-blur-sm">
+                <div class="w-16 h-16 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-bone text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Premium Food & Treats</h3>
+                <p class="text-purple-100">High-quality nutrition for your beloved pet</p>
+            </div>
+            
+            <div class="text-center p-6 bg-white bg-opacity-10 rounded-xl backdrop-blur-sm">
+                <div class="w-16 h-16 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-puzzle-piece text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Toys & Play</h3>
+                <p class="text-purple-100">Interactive toys to keep your dog entertained</p>
+            </div>
+            
+            <div class="text-center p-6 bg-white bg-opacity-10 rounded-xl backdrop-blur-sm">
+                <div class="w-16 h-16 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-heart text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Health & Grooming</h3>
+                <p class="text-purple-100">Keep your dog healthy and looking great</p>
+            </div>
+        </div>
+        
+        <div class="text-center">
+            <a href="{% url 'accessories:shop' %}" 
+               class="bg-white text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-purple-50 transition duration-300 inline-block">
+                <i class="fas fa-shopping-cart mr-2"></i>
+                Visit Accessories Shop
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Custom CSS for animations -->
+<style>
+    @keyframes fade-in {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fade-in {
+        animation: fade-in 1s ease-out;
+    }
+    
+    /* Parallax effect for hero section */
+    .hero-gradient {
+        background-attachment: fixed;
+        background-size: cover;
+        background-position: center;
+    }
+    
+</style>
+
+<!-- Share functionality -->
+<script src="{% static 'js/share.js' %}"></script>
+
+{% endblock %}

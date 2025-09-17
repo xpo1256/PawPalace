@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+
+{% block title %}Conversation with {{ other_user.full_name }} - PawPalace{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <a href="{% url 'messaging:inbox' %}" 
+                   class="bg-primary-700 hover:bg-primary-600 p-2 rounded-lg transition duration-300">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </a>
+                <div class="flex items-center space-x-3">
+                    {% if other_user.profile_image %}
+                        <img src="{{ other_user.profile_image.url }}" 
+                             alt="{{ other_user.full_name }}" 
+                             class="w-12 h-12 rounded-full object-cover border-2 border-primary-300">
+                    {% else %}
+                        <div class="w-12 h-12 rounded-full bg-primary-300 flex items-center justify-center">
+                            <i class="fas fa-user text-primary-800 text-xl"></i>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <h1 class="text-2xl font-bold">{{ other_user.full_name }}</h1>
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                {% if other_user.is_seller %}bg-green-200 text-green-800{% else %}bg-blue-200 text-blue-800{% endif %}">
+                                {% if other_user.is_seller %}
+                                    <i class="fas fa-store mr-1"></i> Seller
+                                {% else %}
+                                    <i class="fas fa-heart mr-1"></i> Buyer
+                                {% endif %}
+                            </span>
+                            {% if other_user.location %}
+                                <span class="text-primary-200 text-sm">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>{{ other_user.location }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dog Info (if conversation is about a specific dog) -->
+            {% if conversation.dog %}
+                <div class="hidden md:flex items-center space-x-3 bg-primary-700 rounded-lg p-3">
+                    <img src="{{ conversation.dog.image.url }}" 
+                         alt="{{ conversation.dog.name }}" 
+                         class="w-10 h-10 rounded-lg object-cover">
+                    <div>
+                        <div class="font-semibold">{{ conversation.dog.name }}</div>
+                        <div class="text-primary-200 text-sm">{{ conversation.dog.breed }} - ${{ conversation.dog.price }}</div>
+                    </div>
+                    <a href="{{ conversation.dog.get_absolute_url }}" 
+                       class="bg-primary-600 hover:bg-primary-500 px-3 py-1 rounded text-sm transition duration-300">
+                        <i class="fas fa-eye mr-1"></i>View
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Messages Section -->
+<section class="py-8 bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Dog Info (Mobile) -->
+        {% if conversation.dog %}
+            <div class="md:hidden mb-6 bg-white rounded-xl shadow-lg p-4">
+                <div class="flex items-center space-x-3">
+                    <img src="{{ conversation.dog.image.url }}" 
+                         alt="{{ conversation.dog.name }}" 
+                         class="w-16 h-16 rounded-lg object-cover">
+                    <div class="flex-1">
+                        <h3 class="font-bold text-gray-900">{{ conversation.dog.name }}</h3>
+                        <p class="text-gray-600">{{ conversation.dog.breed }}</p>
+                        <p class="text-primary-600 font-semibold">${{ conversation.dog.price }}</p>
+                    </div>
+                    <a href="{{ conversation.dog.get_absolute_url }}" 
+                       class="bg-primary-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-primary-600 transition duration-300">
+                        <i class="fas fa-eye mr-1"></i>View
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Messages Container -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Messages List -->
+            <div class="h-96 md:h-[500px] overflow-y-auto p-6 space-y-4" id="messages-container">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="flex {% if message.sender == user %}justify-end{% else %}justify-start{% endif %}">
+                            <div class="max-w-xs md:max-w-md">
+                                {% if message.sender != user %}
+                                    <!-- Other user's message -->
+                                    <div class="flex items-start space-x-2">
+                                        {% if other_user.profile_image %}
+                                            <img src="{{ other_user.profile_image.url }}" 
+                                                 alt="{{ other_user.full_name }}" 
+                                                 class="w-8 h-8 rounded-full object-cover">
+                                        {% else %}
+                                            <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                                                <i class="fas fa-user text-gray-600 text-sm"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="bg-gray-100 rounded-2xl rounded-tl-md px-4 py-3">
+                                                {% if message.subject %}
+                                                    <div class="font-semibold text-gray-900 mb-1">{{ message.subject }}</div>
+                                                {% endif %}
+                                                <p class="text-gray-800">{{ message.content }}</p>
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-1 ml-4 flex items-center">
+                                                <span class="message-time" data-time="{{ message.sent_at|date:'c' }}">
+                                                    {% if message.sent_at|timesince|slice:":2" == "0 " %}
+                                                        Just now
+                                                    {% elif message.sent_at|timesince|slice:":2" == "1 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "2 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "3 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "4 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "5 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "6 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "7 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "8 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "9 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif "hour" in message.sent_at|timesince %}
+                                                        {{ message.sent_at|date:"g:i A" }}
+                                                    {% elif "day" in message.sent_at|timesince %}
+                                                        {{ message.sent_at|date:"M j, g:i A" }}
+                                                    {% else %}
+                                                        {{ message.sent_at|date:"M j, Y g:i A" }}
+                                                    {% endif %}
+                                                </span>
+                                                <!-- Read receipt for received messages -->
+                                                <span class="ml-1" id="read-status-{{ message.id }}">
+                                                    {% if message.is_read %}
+                                                        <i class="fas fa-check-double text-blue-600" title="Read at {{ message.read_at|date:'M j, g:i A' }}"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-check text-gray-400" title="Sent"></i>
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <!-- Your message -->
+                                    <div class="flex items-start justify-end space-x-2">
+                                        <div>
+                                            <div class="bg-primary-500 text-white rounded-2xl rounded-tr-md px-4 py-3">
+                                                {% if message.subject %}
+                                                    <div class="font-semibold mb-1">{{ message.subject }}</div>
+                                                {% endif %}
+                                                <p>{{ message.content }}</p>
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-1 mr-4 text-right flex items-center justify-end">
+                                                <span class="message-time" data-time="{{ message.sent_at|date:'c' }}">
+                                                    {% if message.sent_at|timesince|slice:":2" == "0 " %}
+                                                        Just now
+                                                    {% elif message.sent_at|timesince|slice:":2" == "1 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "2 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "3 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "4 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "5 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "6 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "7 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "8 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif message.sent_at|timesince|slice:":2" == "9 " %}
+                                                        {{ message.sent_at|timesince|slice:":8" }}
+                                                    {% elif "hour" in message.sent_at|timesince %}
+                                                        {{ message.sent_at|date:"g:i A" }}
+                                                    {% elif "day" in message.sent_at|timesince %}
+                                                        {{ message.sent_at|date:"M j, g:i A" }}
+                                                    {% else %}
+                                                        {{ message.sent_at|date:"M j, Y g:i A" }}
+                                                    {% endif %}
+                                                </span>
+                                                <span class="ml-1" id="read-status-{{ message.id }}">
+                                                    {% if message.is_read %}
+                                                        <i class="fas fa-check-double text-blue-600" title="Read at {{ message.read_at|date:'M j, g:i A' }}"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-check text-gray-400" title="Sent"></i>
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {% if user.profile_image %}
+                                            <img src="{{ user.profile_image.url }}" 
+                                                 alt="You" 
+                                                 class="w-8 h-8 rounded-full object-cover">
+                                        {% else %}
+                                            <div class="w-8 h-8 rounded-full bg-primary-300 flex items-center justify-center">
+                                                <i class="fas fa-user text-primary-800 text-sm"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- No messages yet -->
+                    <div class="text-center py-12">
+                        <i class="fas fa-comments text-4xl text-gray-300 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-gray-500 mb-2">Start the conversation!</h3>
+                        <p class="text-gray-400">Send your first message below.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Message Input -->
+            <div class="border-t border-gray-200 p-6">
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <!-- Subject (Optional) -->
+                    <div>
+                        <label for="id_subject" class="block text-sm font-medium text-gray-700 mb-2">
+                            Subject (Optional)
+                        </label>
+                        {{ form.subject }}
+                    </div>
+                    
+                    <!-- Message Content -->
+                    <div>
+                        <label for="id_content" class="block text-sm font-medium text-gray-700 mb-2">
+                            Message *
+                        </label>
+                        {{ form.content }}
+                    </div>
+                    
+                    <!-- Send Button -->
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Be respectful and professional
+                        </div>
+                        <button type="submit" 
+                                class="bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition duration-300">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Safety Notice -->
+        <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+            <div class="flex items-start space-x-3">
+                <i class="fas fa-shield-alt text-yellow-600 text-xl mt-1"></i>
+                <div>
+                    <h3 class="font-semibold text-yellow-800 mb-1">Safety First</h3>
+                    <p class="text-yellow-700 text-sm">
+                        Always meet in public places, verify the dog's health records, and trust your instincts. 
+                        Report any suspicious activity to our support team.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Real-time messaging and auto-scroll script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const messagesContainer = document.getElementById('messages-container');
+        const conversationId = {{ conversation.id }};
+        
+        // Auto-scroll to bottom
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        scrollToBottom();
+        
+        // Auto-resize textarea
+        const textarea = document.querySelector('textarea[name="content"]');
+        if (textarea) {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        }
+        
+        // Function to format time realistically
+        function formatTimeAgo(dateString) {
+            const now = new Date();
+            const messageTime = new Date(dateString);
+            const diffInSeconds = Math.floor((now - messageTime) / 1000);
+            
+            if (diffInSeconds < 60) {
+                return 'Just now';
+            } else if (diffInSeconds < 3600) {
+                const minutes = Math.floor(diffInSeconds / 60);
+                return `${minutes}m ago`;
+            } else if (diffInSeconds < 86400) {
+                const hours = Math.floor(diffInSeconds / 3600);
+                return `${hours}h ago`;
+            } else if (diffInSeconds < 604800) {
+                const days = Math.floor(diffInSeconds / 86400);
+                return `${days}d ago`;
+            } else {
+                return messageTime.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true 
+                });
+            }
+        }
+        
+        // Update all message timestamps
+        function updateTimestamps() {
+            const timeElements = document.querySelectorAll('.message-time');
+            timeElements.forEach(element => {
+                const timeData = element.getAttribute('data-time');
+                if (timeData) {
+                    element.textContent = formatTimeAgo(timeData);
+                }
+            });
+        }
+        
+        // Real-time message updates
+        function updateMessages() {
+            fetch(`/messaging/conversation/${conversationId}/messages/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update read status for existing messages
+                    data.messages.forEach(message => {
+                        const readStatusElement = document.getElementById(`read-status-${message.id}`);
+                        if (readStatusElement) {
+                            if (message.is_read) {
+                                const readTime = message.read_at ? new Date(message.read_at).toLocaleString() : 'Unknown time';
+                                readStatusElement.innerHTML = `<i class="fas fa-check-double text-blue-600" title="Read at ${readTime}"></i>`;
+                            } else {
+                                readStatusElement.innerHTML = `<i class="fas fa-check text-gray-400" title="Sent"></i>`;
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.log('Error updating messages:', error));
+        }
+        
+        // Update messages and timestamps every 3 seconds
+        setInterval(function() {
+            updateMessages();
+            updateTimestamps();
+        }, 3000);
+        
+        // Update timestamps every minute
+        setInterval(updateTimestamps, 60000);
+        
+        // Initial timestamp update
+        updateTimestamps();
+        
+        // Mark messages as read when page becomes visible
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                updateMessages();
+                updateTimestamps();
+            }
+        });
+        
+        // Mark messages as read when user scrolls to bottom
+        messagesContainer.addEventListener('scroll', function() {
+            if (messagesContainer.scrollTop + messagesContainer.clientHeight >= messagesContainer.scrollHeight - 10) {
+                updateMessages();
+            }
+        });
+    });
+</script>
+{% endblock %}

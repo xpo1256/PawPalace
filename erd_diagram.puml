@@ -1,0 +1,118 @@
+@startuml
+title 🐶 Dog Selling Website - ERD (Entity Relationship Diagram)
+
+entity "User" as user {
+  * id : int <<PK>>
+  --
+  username : varchar(150)
+  first_name : varchar(150)
+  last_name : varchar(150)
+  email : email
+  password : varchar(128)
+  phone : varchar(20)
+  role : enum("buyer", "seller", "admin")
+  profile_image : ImageField
+  location : varchar(100)
+  bio : text
+  is_active : boolean
+  is_staff : boolean
+  is_superuser : boolean
+  date_joined : datetime
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "Dog" as dog {
+  * id : int <<PK>>
+  --
+  name : varchar(100)
+  breed : varchar(100)
+  age : int
+  gender : enum("male", "female")
+  price : decimal(10,2)
+  description : text
+  location : varchar(100)
+  weight : decimal(5,2)
+  color : varchar(50)
+  is_vaccinated : boolean
+  is_neutered : boolean
+  health_certificate : FileField
+  image : ImageField
+  image2 : ImageField
+  image3 : ImageField
+  image4 : ImageField
+  status : enum("available", "sold", "pending")
+  views_count : int
+  is_featured : boolean
+  created_at : datetime
+  updated_at : datetime
+  seller_id : int <<FK>>
+}
+
+entity "Message" as message {
+  * id : int <<PK>>
+  --
+  sender_id : int <<FK>>
+  receiver_id : int <<FK>>
+  dog_id : int <<FK>>
+  subject : varchar(200)
+  content : text
+  is_read : boolean
+  sent_at : datetime
+  read_at : datetime
+}
+
+entity "Favorite" as favorite {
+  * id : int <<PK>>
+  --
+  user_id : int <<FK>>
+  dog_id : int <<FK>>
+  created_at : datetime
+}
+
+entity "Order" as order {
+  * id : int <<PK>>
+  --
+  buyer_id : int <<FK>>
+  dog_id : int <<FK>>
+  status : enum("pending", "confirmed", "cancelled", "completed")
+  buyer_name : varchar(100)
+  buyer_email : email
+  buyer_phone : varchar(20)
+  message : text
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "Conversation" as conversation {
+  * id : int <<PK>>
+  --
+  dog_id : int <<FK>>
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "ConversationParticipant" as conv_participant {
+  * id : int <<PK>>
+  --
+  conversation_id : int <<FK>>
+  user_id : int <<FK>>
+}
+
+' --- Relationships ---
+user ||--o{ dog : "seller sells dogs"
+user ||--o{ message : "sender sends messages"
+user ||--o{ message : "receiver receives messages"
+user ||--o{ favorite : "user favorites dogs"
+user ||--o{ order : "buyer makes orders"
+user ||--o{ conv_participant : "participates in conversations"
+
+dog ||--o{ message : "messages about dog"
+dog ||--o{ favorite : "dog can be favorited"
+dog ||--o{ order : "dog can be ordered"
+dog ||--o{ conversation : "conversations about dog"
+
+conversation ||--o{ message : "contains messages"
+conversation ||--o{ conv_participant : "has participants"
+
+@enduml

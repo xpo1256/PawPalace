@@ -1,0 +1,19 @@
+# Realistic Breed-Specific Image Mapping
+# Each breed should have its correct matching image
+
+# Current Issue: Images are not breed-specific
+# Need to find proper breed-specific images for each breed
+
+# Example of what we need:
+# Pomeranian: Should show a fluffy, small, fox-like dog
+# Golden Retriever: Should show a golden, medium-large dog with long hair
+# Labrador: Should show a short-haired, medium-large dog
+# German Shepherd: Should show a large, working dog with pointed ears
+# French Bulldog: Should show a small, muscular dog with bat ears
+# Bulldog: Should show a medium-sized, muscular dog with wrinkled face
+# Poodle: Should show a curly-haired dog
+# Beagle: Should show a small to medium hound with floppy ears
+# Rottweiler: Should show a large, black and tan dog
+# Siberian Husky: Should show a wolf-like dog with blue or brown eyes
+
+# Current images are not breed-specific - need to find proper ones

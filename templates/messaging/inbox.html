@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}Messages - PawPalace{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                <i class="fas fa-envelope mr-3"></i>
+                Your Messages
+            </h1>
+            <p class="text-xl text-primary-100 max-w-2xl mx-auto">
+                Stay connected with sellers and buyers. Manage all your conversations in one place.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Messages Content -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-primary-50 px-6 py-4 border-b border-primary-100">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-comments text-primary-500 mr-2"></i>
+                        Conversations
+                    </h2>
+                    <div class="flex items-center space-x-2 text-sm text-gray-600">
+                        <i class="fas fa-inbox"></i>
+                        <span>{{ conversations_with_other|length }} conversation{{ conversations_with_other|length|pluralize }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if conversations_with_other %}
+                <!-- Conversations List -->
+                <div class="divide-y divide-gray-200">
+                    {% for item in conversations_with_other %}
+                        {% with conversation=item.conversation other_user=item.other_user %}
+                        <div class="p-6 hover:bg-gray-50 transition duration-300">
+                            <a href="{% url 'messaging:conversation' conversation.pk %}" class="block">
+                                <div class="flex items-start space-x-4">
+                                    <!-- Avatar -->
+                                    <div class="flex-shrink-0">
+                                        {% if other_user.profile_image %}
+                                            <img src="{{ other_user.profile_image.url }}" 
+                                                 alt="{{ other_user.full_name }}" 
+                                                 class="w-12 h-12 rounded-full object-cover">
+                                        {% else %}
+                                            <div class="w-12 h-12 rounded-full bg-primary-500 flex items-center justify-center">
+                                                <i class="fas fa-user text-white text-xl"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Conversation Details -->
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <div class="flex items-center space-x-2">
+                                                <h3 class="text-lg font-semibold text-gray-900">
+                                                    {{ other_user.full_name }}
+                                                </h3>
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                    {% if other_user.is_seller %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                                                    {% if other_user.is_seller %}
+                                                        <i class="fas fa-store mr-1"></i> Seller
+                                                    {% else %}
+                                                        <i class="fas fa-heart mr-1"></i> Buyer
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                            <div class="text-sm text-gray-500 conversation-time" data-time="{{ conversation.updated_at|date:'c' }}">
+                                                {% if conversation.updated_at|timesince|slice:":2" == "0 " %}
+                                                    Just now
+                                                {% elif conversation.updated_at|timesince|slice:":2" == "1 " %}
+                                                    {{ conversation.updated_at|timesince|slice:":8" }}
+                                                {% elif conversation.updated_at|timesince|slice:":2" == "2 " %}
+                                                    {{ conversation.updated_at|timesince|slice:":8" }}
+                                                {% elif conversation.updated_at|timesince|slice:":2" == "3 " %}
+                                                    {{ conversation.updated_at|timesince|slice:":8" }}
+                                                {% elif conversation.updated_at|timesince|slice:":2" == "4 " %}
+                                                    {{ conversation.updated_at|timesince|slice:":8" }}
+                                                {% elif conversation.updated_at|timesince|slice:":2" == "5 " %}
+                                                    {{ conversation.updated_at|timesince|slice:":8" }}
+                                                {% elif conversation.updated_at|timesince|slice:":2" == "6 " %}
+                                                    {{ conversation.updated_at|timesince|slice:":8" }}
+                                                {% elif conversation.updated_at|timesince|slice:":2" == "7 " %}
+                                                    {{ conversation.updated_at|timesince|slice:":8" }}
+                                                {% elif conversation.updated_at|timesince|slice:":2" == "8 " %}
+                                                    {{ conversation.updated_at|timesince|slice:":8" }}
+                                                {% elif conversation.updated_at|timesince|slice:":2" == "9 " %}
+                                                    {{ conversation.updated_at|timesince|slice:":8" }}
+                                                {% elif "hour" in conversation.updated_at|timesince %}
+                                                    {{ conversation.updated_at|date:"g:i A" }}
+                                                {% elif "day" in conversation.updated_at|timesince %}
+                                                    {{ conversation.updated_at|date:"M j, g:i A" }}
+                                                {% else %}
+                                                    {{ conversation.updated_at|date:"M j, Y g:i A" }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <!-- Dog Info (if conversation is about a specific dog) -->
+                                        {% if conversation.dog %}
+                                            <div class="flex items-center space-x-2 mb-2">
+                                                <i class="fas fa-dog text-primary-500"></i>
+                                                <span class="text-sm text-primary-600 font-medium">
+                                                    About: {{ conversation.dog.name }} ({{ conversation.dog.breed }})
+                                                </span>
+                                                <span class="text-sm text-gray-500">- ${{ conversation.dog.price }}</span>
+                                            </div>
+                                        {% endif %}
+
+                                        <!-- Last Message Preview -->
+                                        {% if conversation.last_message %}
+                                            <div class="flex items-center justify-between">
+                                                <p class="text-gray-600 text-sm line-clamp-2 flex-1">
+                                                    {% if conversation.last_message.sender == user %}
+                                                        <span class="font-medium">You:</span>
+                                                    {% else %}
+                                                        <span class="font-medium">{{ conversation.last_message.sender.first_name }}:</span>
+                                                    {% endif %}
+                                                    {{ conversation.last_message.content|truncatewords:15 }}
+                                                </p>
+                                                <!-- Read Receipt for your messages -->
+                                                {% if conversation.last_message.sender == user %}
+                                                    <div class="ml-2">
+                                                        {% if conversation.last_message.is_read %}
+                                                            <i class="fas fa-check-double text-blue-600 text-xs" title="Read at {{ conversation.last_message.read_at|date:'M j, g:i A' }}"></i>
+                                                        {% else %}
+                                                            <i class="fas fa-check text-gray-400 text-xs" title="Sent"></i>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+
+                                        <!-- Unread Indicator -->
+                                        {% if conversation.last_message and not conversation.last_message.is_read and conversation.last_message.receiver == user %}
+                                            <div class="mt-2">
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                    <i class="fas fa-circle text-red-500 mr-1" style="font-size: 6px;"></i>
+                                                    New Message
+                                                </span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Chevron -->
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-chevron-right text-gray-400"></i>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% endwith %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Empty State -->
+                <div class="text-center py-16">
+                    <div class="mb-6">
+                        <i class="fas fa-envelope-open text-6xl text-gray-300"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-500 mb-4">No Messages Yet</h3>
+                    <p class="text-gray-400 mb-8 max-w-md mx-auto">
+                        Start connecting with sellers and buyers! Your conversations will appear here.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="{% url 'dogs:list' %}" 
+                           class="bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-600 transition duration-300 inline-block">
+                            <i class="fas fa-search mr-2"></i>
+                            Browse Dogs
+                        </a>
+                        {% if user.is_seller %}
+                            <a href="{% url 'dogs:add' %}" 
+                               class="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition duration-300 inline-block">
+                                <i class="fas fa-plus-circle mr-2"></i>
+                                Add Your Dog
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Help Section -->
+        <div class="mt-8 bg-blue-50 rounded-xl p-6">
+            <div class="flex items-start space-x-4">
+                <div class="bg-blue-100 p-3 rounded-lg">
+                    <i class="fas fa-info-circle text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-blue-900 mb-2">Messaging Tips</h3>
+                    <ul class="text-blue-800 text-sm space-y-1">
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Be respectful and professional in all communications</li>
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Ask specific questions about the dog's health, temperament, and history</li>
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Arrange safe meeting locations for dog viewings</li>
+                        <li><i class="fas fa-check text-blue-600 mr-2"></i>Report any suspicious or inappropriate messages to our support team</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Custom CSS -->
+<style>
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+
+<!-- Real-time timestamp updates -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to format time realistically
+        function formatTimeAgo(dateString) {
+            const now = new Date();
+            const messageTime = new Date(dateString);
+            const diffInSeconds = Math.floor((now - messageTime) / 1000);
+            
+            if (diffInSeconds < 60) {
+                return 'Just now';
+            } else if (diffInSeconds < 3600) {
+                const minutes = Math.floor(diffInSeconds / 60);
+                return `${minutes}m ago`;
+            } else if (diffInSeconds < 86400) {
+                const hours = Math.floor(diffInSeconds / 3600);
+                return `${hours}h ago`;
+            } else if (diffInSeconds < 604800) {
+                const days = Math.floor(diffInSeconds / 86400);
+                return `${days}d ago`;
+            } else {
+                return messageTime.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true 
+                });
+            }
+        }
+        
+        // Update all conversation timestamps
+        function updateConversationTimestamps() {
+            const timeElements = document.querySelectorAll('.conversation-time');
+            timeElements.forEach(element => {
+                const timeData = element.getAttribute('data-time');
+                if (timeData) {
+                    element.textContent = formatTimeAgo(timeData);
+                }
+            });
+        }
+        
+        // Update timestamps every minute
+        setInterval(updateConversationTimestamps, 60000);
+        
+        // Initial timestamp update
+        updateConversationTimestamps();
+    });
+</script>
+{% endblock %}

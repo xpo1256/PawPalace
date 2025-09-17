@@ -1,0 +1,487 @@
+{% extends 'base.html' %}
+
+{% block title %}Join PawPalace - Create Your Account{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="flex justify-center mb-6">
+                <div class="bg-primary-500 p-4 rounded-full">
+                    <i class="fas fa-paw text-3xl text-white"></i>
+                </div>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Join PawPalace</h2>
+            <p class="text-gray-600">Create your account and start your journey to find the perfect furry friend</p>
+        </div>
+
+        <!-- Registration Form -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Role Selection -->
+                <div class="bg-primary-50 p-6 rounded-xl">
+                    <label class="block text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-user-tag mr-2"></i>What brings you to PawPalace?
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Buyer Option -->
+                        <div class="flex items-center p-4 bg-white border border-gray-300 rounded-lg cursor-pointer hover:border-primary-300 transition duration-300 role-option" data-role="buyer">
+                            <input type="radio" name="role" value="buyer" id="role_buyer" class="text-primary-600 focus:ring-primary-500" checked>
+                            <label for="role_buyer" class="ml-4 cursor-pointer flex-1">
+                                <div class="font-semibold text-gray-900">
+                                    <i class="fas fa-heart text-red-500 mr-2"></i>Find a Pet
+                                </div>
+                                <div class="text-sm text-gray-600">I'm looking for a furry companion</div>
+                            </label>
+                        </div>
+                        
+                        <!-- Seller Option -->
+                        <div class="flex items-center p-4 bg-white border border-gray-300 rounded-lg cursor-pointer hover:border-primary-300 transition duration-300 role-option" data-role="seller">
+                            <input type="radio" name="role" value="seller" id="role_seller" class="text-primary-600 focus:ring-primary-500">
+                            <label for="role_seller" class="ml-4 cursor-pointer flex-1">
+                                <div class="font-semibold text-gray-900">
+                                    <i class="fas fa-store text-green-500 mr-2"></i>Sell Dogs
+                                </div>
+                                <div class="text-sm text-gray-600">I have dogs to find homes for</div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Debug section -->
+                    <div class="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
+                        <div class="text-sm text-yellow-800">
+                            <strong>Debug:</strong> 
+                            <button type="button" onclick="testRoleSelection()" class="ml-2 px-2 py-1 bg-yellow-200 rounded text-xs">Test Role Selection</button>
+                            <button type="button" onclick="setSellerRole()" class="ml-2 px-2 py-1 bg-green-200 rounded text-xs">Force Set Seller</button>
+                            <span id="debug-output" class="ml-2"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- First Name -->
+                    <div>
+                        <label for="id_first_name" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user mr-1"></i> First Name
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.first_name.errors %}
+                                    <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Last Name -->
+                    <div>
+                        <label for="id_last_name" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user mr-1"></i> Last Name
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.last_name.errors %}
+                                    <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Username -->
+                <div>
+                    <label for="id_username" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-at mr-1"></i> Username
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.username.errors %}
+                                <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="id_email" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-1"></i> Email Address
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.email.errors %}
+                                <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Phone -->
+                <div>
+                    <label for="id_phone" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-phone mr-1"></i> Phone Number (Optional)
+                    </label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.phone.errors %}
+                                <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Password Fields -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Password -->
+                    <div>
+                        <label for="id_password1" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-lock mr-1"></i> Password
+                        </label>
+                        <div class="relative">
+                            {{ form.password1 }}
+                            <button type="button" onclick="togglePassword('id_password1', 'password1-toggle')" 
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye" id="password1-toggle"></i>
+                            </button>
+                        </div>
+                        {% if form.password1.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.password1.errors %}
+                                    <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label for="id_password2" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-lock mr-1"></i> Confirm Password
+                        </label>
+                        <div class="relative">
+                            {{ form.password2 }}
+                            <button type="button" onclick="togglePassword('id_password2', 'password2-toggle')" 
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye" id="password2-toggle"></i>
+                            </button>
+                        </div>
+                        {% if form.password2.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.password2.errors %}
+                                    <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Terms and Conditions -->
+                <div class="flex items-start">
+                    <input type="checkbox" required 
+                           class="w-5 h-5 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 mt-1">
+                    <div class="ml-3">
+                        <p class="text-sm text-gray-600">
+                            I agree to the 
+                            <a href="#" class="text-primary-600 hover:text-primary-500 transition duration-300">Terms of Service</a> 
+                            and 
+                            <a href="#" class="text-primary-600 hover:text-primary-500 transition duration-300">Privacy Policy</a>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Form Errors -->
+                {% if form.non_field_errors %}
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        {% for error in form.non_field_errors %}
+                            <p class="text-sm text-red-600">
+                                <i class="fas fa-exclamation-circle mr-1"></i>{{ error }}
+                            </p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                        class="w-full bg-primary-500 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition duration-300 transform hover:scale-105">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    Create My Account
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="mt-8">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">Already have an account?</span>
+                    </div>
+                </div>
+
+                <!-- Sign In Link -->
+                <div class="mt-6 text-center">
+                    <a href="{% url 'accounts:login' %}" 
+                       class="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-semibold text-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-300 inline-block">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Sign In Instead
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Benefits Section -->
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center p-6 bg-white rounded-xl shadow-lg">
+                <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-shield-alt text-2xl text-green-600"></i>
+                </div>
+                <h3 class="font-semibold text-gray-900 mb-2">Safe & Secure</h3>
+                <p class="text-sm text-gray-600">All sellers are verified and transactions are protected</p>
+            </div>
+            
+            <div class="text-center p-6 bg-white rounded-xl shadow-lg">
+                <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-heart text-2xl text-blue-600"></i>
+                </div>
+                <h3 class="font-semibold text-gray-900 mb-2">Find Love</h3>
+                <p class="text-sm text-gray-600">Discover your perfect furry companion from loving homes</p>
+            </div>
+            
+            <div class="text-center p-6 bg-white rounded-xl shadow-lg">
+                <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-users text-2xl text-purple-600"></i>
+                </div>
+                <h3 class="font-semibold text-gray-900 mb-2">Community</h3>
+                <p class="text-sm text-gray-600">Join a community of dog lovers and responsible pet owners</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Style radio buttons properly */
+    input[type="radio"] {
+        width: 20px;
+        height: 20px;
+        margin: 0;
+        cursor: pointer;
+    }
+    
+    .role-option {
+        transition: all 0.3s ease;
+    }
+    
+    .role-option:hover {
+        border-color: #3B82F6 !important;
+        background-color: #F8FAFC !important;
+    }
+    
+    .role-option:has(input[type="radio"]:checked) {
+        border-color: #3B82F6 !important;
+        background-color: #F8FAFC !important;
+    }
+    
+    /* Force consistent styling for all form inputs */
+    input[type="text"], 
+    input[type="email"], 
+    input[type="password"], 
+    input[type="tel"] {
+        background-color: white !important;
+        border: 1px solid #D1D5DB !important;
+        border-radius: 0.5rem !important;
+        padding: 0.75rem 1rem !important;
+        width: 100% !important;
+        font-size: 1rem !important;
+        line-height: 1.5rem !important;
+        color: #111827 !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    /* Ensure placeholders are visible */
+    input::placeholder {
+        color: #9CA3AF !important;
+        opacity: 1 !important;
+        font-size: 1rem !important;
+    }
+    
+    input::-webkit-input-placeholder {
+        color: #9CA3AF !important;
+        opacity: 1 !important;
+    }
+    
+    input::-moz-placeholder {
+        color: #9CA3AF !important;
+        opacity: 1 !important;
+    }
+    
+    input:-ms-input-placeholder {
+        color: #9CA3AF !important;
+        opacity: 1 !important;
+    }
+    
+    input[type="text"]:focus, 
+    input[type="email"]:focus, 
+    input[type="password"]:focus, 
+    input[type="tel"]:focus {
+        outline: none !important;
+        border: 1px solid #3B82F6 !important;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+        background-color: #EFF6FF !important;
+    }
+    
+    input[type="text"]:hover, 
+    input[type="email"]:hover, 
+    input[type="password"]:hover, 
+    input[type="tel"]:hover {
+        border: 1px solid #9CA3AF !important;
+        background-color: white !important;
+    }
+</style>
+
+<script>
+    function togglePassword(fieldId, iconId) {
+        const passwordField = document.getElementById(fieldId);
+        const toggleIcon = document.getElementById(iconId);
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            toggleIcon.className = 'fas fa-eye-slash';
+        } else {
+            passwordField.type = 'password';
+            toggleIcon.className = 'fas fa-eye';
+        }
+    }
+
+    // Force clear any cached form data and refresh placeholders
+    function clearFormCache() {
+        // Clear any cached form data
+        if (window.performance && window.performance.navigation.type === 1) {
+            // Page was refreshed, clear any cached data
+            localStorage.removeItem('formData');
+        }
+        
+        // Force refresh placeholders
+        const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], input[type="tel"]');
+        inputs.forEach(input => {
+            if (input.placeholder) {
+                const placeholder = input.placeholder;
+                input.placeholder = '';
+                setTimeout(() => {
+                    input.placeholder = placeholder;
+                }, 10);
+            }
+        });
+    }
+    
+    // Test function for debugging role selection
+    function testRoleSelection() {
+        const allRoleInputs = document.querySelectorAll('input[name="role"]');
+        let output = 'Role inputs: ';
+        allRoleInputs.forEach((input, index) => {
+            output += `[${index}] ${input.value}:${input.checked} `;
+        });
+        const selected = document.querySelector('input[name="role"]:checked');
+        output += `| Selected: ${selected ? selected.value : 'NONE'}`;
+        document.getElementById('debug-output').textContent = output;
+        console.log('Test output:', output);
+    }
+    
+    // Force set seller role for testing
+    function setSellerRole() {
+        const sellerInput = document.getElementById('role_seller');
+        const buyerInput = document.getElementById('role_buyer');
+        
+        if (sellerInput && buyerInput) {
+            buyerInput.checked = false;
+            sellerInput.checked = true;
+            sellerInput.dispatchEvent(new Event('change'));
+            console.log('Forced seller role selection');
+            testRoleSelection();
+        } else {
+            console.log('Could not find radio buttons with IDs');
+        }
+    }
+    
+    // Role selection styling and handling
+    document.addEventListener('DOMContentLoaded', function() {
+        // Clear form cache on page load
+        clearFormCache();
+        const roleOptions = document.querySelectorAll('.role-option');
+        const roleInputs = document.querySelectorAll('input[name="role"]');
+        
+        // Initialize with selected role
+        function updateRoleStyling() {
+            roleOptions.forEach(option => {
+                const optionRadio = option.querySelector('input[type="radio"]');
+                if (optionRadio.checked) {
+                    option.classList.add('border-primary-500', 'bg-slate-50');
+                    option.classList.remove('border-gray-300', 'bg-white');
+                } else {
+                    option.classList.remove('border-primary-500', 'bg-slate-50');
+                    option.classList.add('border-gray-300', 'bg-white');
+                }
+            });
+        }
+        
+        // Initialize styling
+        updateRoleStyling();
+        
+        // Handle role selection - simplified approach
+        roleInputs.forEach(radio => {
+            radio.addEventListener('change', function() {
+                console.log('Role changed to:', this.value);
+                console.log('Radio checked:', this.checked);
+                updateRoleStyling();
+            });
+        });
+        
+        // Handle clicking on the entire option - simplified
+        roleOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                // Only handle clicks on the container, not on the radio or label
+                if (e.target.type === 'radio' || e.target.tagName === 'LABEL') {
+                    return; // Let the browser handle it naturally
+                }
+                
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio && !radio.checked) {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change'));
+                    console.log('Role selected via container click:', radio.value);
+                }
+            });
+        });
+        
+        // Add form submission debugging
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const selectedRole = document.querySelector('input[name="role"]:checked');
+            console.log('Form submission - selected role:', selectedRole);
+            if (selectedRole) {
+                console.log('Form submitting with role:', selectedRole.value);
+                console.log('Role input name:', selectedRole.name);
+                console.log('Role input checked:', selectedRole.checked);
+            } else {
+                console.log('No role selected!');
+                console.log('All role inputs:', document.querySelectorAll('input[name="role"]'));
+            }
+            
+            // Debug: Check all role inputs
+            const allRoleInputs = document.querySelectorAll('input[name="role"]');
+            console.log('All role inputs:');
+            allRoleInputs.forEach((input, index) => {
+                console.log(`Input ${index}: value=${input.value}, checked=${input.checked}`);
+            });
+        });
+    });
+</script>
+{% endblock %}

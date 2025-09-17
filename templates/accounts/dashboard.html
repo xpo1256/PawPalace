@@ -1,0 +1,546 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - PawPalace{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                {% if user.profile_image %}
+                    <img src="{{ user.profile_image.url }}" 
+                         alt="{{ user.full_name }}" 
+                         class="w-16 h-16 rounded-full object-cover border-4 border-primary-300">
+                {% else %}
+                    <div class="w-16 h-16 rounded-full bg-primary-300 flex items-center justify-center">
+                        <i class="fas fa-user text-primary-800 text-2xl"></i>
+                    </div>
+                {% endif %}
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold">
+                        Welcome back, {{ user.first_name|default:user.username }}!
+                    </h1>
+                    <div class="flex items-center space-x-2 mt-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                            {% if user.is_seller %}bg-green-200 text-green-800{% else %}bg-blue-200 text-blue-800{% endif %}">
+                            {% if user.is_seller %}
+                                <i class="fas fa-store mr-1"></i> Seller Account
+                            {% else %}
+                                <i class="fas fa-heart mr-1"></i> Buyer Account
+                            {% endif %}
+                        </span>
+                        {% if user.location %}
+                            <span class="text-primary-200">
+                                <i class="fas fa-map-marker-alt mr-1"></i>{{ user.location }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="hidden md:block">
+                <a href="{% url 'accounts:profile' %}" 
+                   class="bg-primary-700 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold transition duration-300">
+                    <i class="fas fa-edit mr-2"></i>
+                    Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if user.is_seller %}
+    <!-- Seller Dashboard -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-dog text-blue-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900">{{ total_dogs }}</div>
+                            <div class="text-gray-600">Total Dogs</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900">{{ available_dogs }}</div>
+                            <div class="text-gray-600">Available</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="bg-yellow-100 p-3 rounded-lg">
+                            <i class="fas fa-shopping-cart text-yellow-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900">{{ sold_dogs }}</div>
+                            <div class="text-gray-600">Sold</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="bg-purple-100 p-3 rounded-lg">
+                            <i class="fas fa-eye text-purple-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900">{{ total_views }}</div>
+                            <div class="text-gray-600">Total Views</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">
+                    <i class="fas fa-bolt text-primary-500 mr-2"></i>
+                    Quick Actions
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <a href="{% url 'dogs:add' %}" 
+                       class="bg-primary-500 text-white p-4 rounded-lg text-center hover:bg-primary-600 transition duration-300">
+                        <i class="fas fa-plus-circle text-2xl mb-2"></i>
+                        <div class="font-semibold">Add New Dog</div>
+                    </a>
+                    <a href="{% url 'accessories:add' %}" 
+                       class="bg-purple-500 text-white p-4 rounded-lg text-center hover:bg-purple-600 transition duration-300">
+                        <i class="fas fa-shopping-bag text-2xl mb-2"></i>
+                        <div class="font-semibold">Add Accessory</div>
+                    </a>
+                    <a href="{% url 'accounts:seller_orders' %}" 
+                       class="bg-green-500 text-white p-4 rounded-lg text-center hover:bg-green-600 transition duration-300">
+                        <i class="fas fa-clipboard-list text-2xl mb-2"></i>
+                        <div class="font-semibold">View Orders</div>
+                    </a>
+                    <a href="{% url 'messaging:inbox' %}" 
+                       class="bg-blue-500 text-white p-4 rounded-lg text-center hover:bg-blue-600 transition duration-300 relative">
+                        <i class="fas fa-envelope text-2xl mb-2"></i>
+                        <div class="font-semibold">Messages</div>
+                        {% if unread_messages_count > 0 %}
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
+                                {{ unread_messages_count }}
+                            </span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- My Dogs -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-primary-50 px-6 py-4 border-b border-primary-100">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xl font-bold text-gray-900">
+                                <i class="fas fa-dog text-primary-500 mr-2"></i>
+                                My Dogs
+                            </h2>
+                            <a href="{% url 'dogs:add' %}" 
+                               class="text-primary-600 hover:text-primary-500 text-sm font-medium">
+                                Add New <i class="fas fa-plus ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        {% if my_dogs %}
+                            <div class="space-y-4 max-h-96 overflow-y-auto">
+                                {% for dog in my_dogs|slice:":5" %}
+                                    <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                                        <img src="{{ dog.image.url }}" alt="{{ dog.name }}" 
+                                             class="w-16 h-16 rounded-lg object-cover">
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-gray-900">{{ dog.name }}</h3>
+                                            <p class="text-gray-600 text-sm">{{ dog.breed }} - ${{ dog.price }}</p>
+                                            <div class="flex items-center space-x-2 mt-1">
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                                    {% if dog.status == 'available' %}bg-green-100 text-green-800
+                                                    {% elif dog.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                    {{ dog.get_status_display }}
+                                                </span>
+                                                <span class="text-xs text-gray-500">
+                                                    <i class="fas fa-eye mr-1"></i>{{ dog.views_count }} views
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col space-y-1">
+                                            <a href="{{ dog.get_absolute_url }}" 
+                                               class="text-primary-600 hover:text-primary-500 text-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'dogs:edit' dog.pk %}" 
+                                               class="text-blue-600 hover:text-blue-500 text-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if my_dogs|length > 5 %}
+                                <div class="mt-4 text-center">
+                                    <a href="{% url 'dogs:list' %}?seller={{ user.id }}" 
+                                       class="text-primary-600 hover:text-primary-500 text-sm font-medium">
+                                        View all {{ my_dogs|length }} dogs
+                                        <i class="fas fa-arrow-right ml-1"></i>
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="text-center py-8">
+                                <i class="fas fa-dog text-4xl text-gray-300 mb-4"></i>
+                                <h3 class="text-lg font-semibold text-gray-500 mb-2">No dogs listed yet</h3>
+                                <p class="text-gray-400 mb-4">Start by adding your first dog listing</p>
+                                <a href="{% url 'dogs:add' %}" 
+                                   class="bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-600 transition duration-300 inline-block">
+                                    <i class="fas fa-plus-circle mr-2"></i>
+                                    Add Your First Dog
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Recent Orders (Sellers Only) -->
+                {% if user.is_seller %}
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                        <div class="bg-green-50 px-6 py-4 border-b border-green-100">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-xl font-bold text-gray-900">
+                                    <i class="fas fa-shopping-cart text-green-500 mr-2"></i>
+                                    Recent Orders
+                                </h2>
+                                <a href="{% url 'accounts:seller_orders' %}" 
+                                   class="text-green-600 hover:text-green-500 text-sm font-medium">
+                                    View All <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6">
+                            {% if recent_orders %}
+                                <div class="space-y-4 max-h-96 overflow-y-auto">
+                                    {% for order in recent_orders|slice:":5" %}
+                                        <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                                            <img src="{{ order.dog.image.url }}" alt="{{ order.dog.name }}" 
+                                                 class="w-12 h-12 rounded-lg object-cover">
+                                            <div class="flex-1">
+                                                <h3 class="font-semibold text-gray-900">{{ order.dog.name }}</h3>
+                                                <p class="text-gray-600 text-sm">{{ order.buyer.full_name }}</p>
+                                                <div class="flex items-center space-x-2 mt-1">
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                                        {% if order.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                                        {% elif order.status == 'confirmed' %}bg-green-100 text-green-800
+                                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                        {{ order.get_status_display }}
+                                                    </span>
+                                                    <span class="text-xs text-gray-500">
+                                                        {{ order.created_at|timesince }} ago
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="font-semibold text-gray-900">${{ order.dog.price }}</div>
+                                                <a href="{% url 'messaging:inbox' %}" 
+                                                   class="text-primary-600 hover:text-primary-500 text-sm">
+                                                    <i class="fas fa-envelope"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-8">
+                                    <i class="fas fa-shopping-cart text-4xl text-gray-300 mb-4"></i>
+                                    <h3 class="text-lg font-semibold text-gray-500 mb-2">No orders yet</h3>
+                                    <p class="text-gray-400">Orders for your dogs will appear here</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+{% else %}
+    <!-- Buyer Dashboard -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="bg-red-100 p-3 rounded-lg">
+                            <i class="fas fa-heart text-red-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900">{{ total_favorites }}</div>
+                            <div class="text-gray-600">Favorite Dogs</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-shopping-cart text-blue-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900">{{ total_orders }}</div>
+                            <div class="text-gray-600">Orders Placed</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-envelope text-green-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900">{{ favorites|length }}</div>
+                            <div class="text-gray-600">Recent Favorites</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">
+                    <i class="fas fa-bolt text-primary-500 mr-2"></i>
+                    Quick Actions
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <a href="{% url 'dogs:list' %}" 
+                       class="bg-primary-500 text-white p-4 rounded-lg text-center hover:bg-primary-600 transition duration-300">
+                        <i class="fas fa-search text-2xl mb-2"></i>
+                        <div class="font-semibold">Browse Dogs</div>
+                    </a>
+                    {% if not user.is_seller %}
+                    <a href="{% url 'accounts:favorites' %}" 
+                       class="bg-red-500 text-white p-4 rounded-lg text-center hover:bg-red-600 transition duration-300">
+                        <i class="fas fa-heart text-2xl mb-2"></i>
+                        <div class="font-semibold">My Favorites</div>
+                    </a>
+                    <a href="{% url 'accounts:orders' %}" 
+                       class="bg-green-500 text-white p-4 rounded-lg text-center hover:bg-green-600 transition duration-300">
+                        <i class="fas fa-shopping-cart text-2xl mb-2"></i>
+                        <div class="font-semibold">My Orders</div>
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'messaging:inbox' %}" 
+                       class="bg-blue-500 text-white p-4 rounded-lg text-center hover:bg-blue-600 transition duration-300 relative">
+                        <i class="fas fa-envelope text-2xl mb-2"></i>
+                        <div class="font-semibold">Messages</div>
+                        {% if unread_messages_count > 0 %}
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
+                                {{ unread_messages_count }}
+                            </span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Favorite Dogs (Buyers Only) -->
+                {% if not user.is_seller %}
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-red-50 px-6 py-4 border-b border-red-100">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xl font-bold text-gray-900">
+                                <i class="fas fa-heart text-red-500 mr-2"></i>
+                                Favorite Dogs
+                            </h2>
+                            <a href="{% url 'accounts:favorites' %}" 
+                               class="text-red-600 hover:text-red-500 text-sm font-medium">
+                                View All <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        {% if favorites %}
+                            <div class="space-y-4 max-h-96 overflow-y-auto">
+                                {% for favorite in favorites %}
+                                    <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                                        <img src="{{ favorite.dog.image.url }}" alt="{{ favorite.dog.name }}" 
+                                             class="w-16 h-16 rounded-lg object-cover">
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-gray-900">{{ favorite.dog.name }}</h3>
+                                            <p class="text-gray-600 text-sm">{{ favorite.dog.breed }} - ${{ favorite.dog.price }}</p>
+                                            <p class="text-gray-500 text-xs">
+                                                <i class="fas fa-map-marker-alt mr-1"></i>{{ favorite.dog.location }}
+                                            </p>
+                                        </div>
+                                        <div class="flex flex-col space-y-1">
+                                            <a href="{{ favorite.dog.get_absolute_url }}" 
+                                               class="text-primary-600 hover:text-primary-500 text-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'messaging:send_message' favorite.dog.pk %}" 
+                                               class="text-green-600 hover:text-green-500 text-sm">
+                                                <i class="fas fa-envelope"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-8">
+                                <i class="fas fa-heart text-4xl text-gray-300 mb-4"></i>
+                                <h3 class="text-lg font-semibold text-gray-500 mb-2">No favorites yet</h3>
+                                <p class="text-gray-400 mb-4">Start browsing to find dogs you love</p>
+                                <a href="{% url 'dogs:list' %}" 
+                                   class="bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-600 transition duration-300 inline-block">
+                                    <i class="fas fa-search mr-2"></i>
+                                    Browse Dogs
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Recent Orders (Buyers Only) -->
+                {% if not user.is_seller %}
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                        <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-xl font-bold text-gray-900">
+                                    <i class="fas fa-shopping-cart text-blue-500 mr-2"></i>
+                                    My Orders
+                                </h2>
+                                <a href="{% url 'accounts:orders' %}" 
+                                   class="text-blue-600 hover:text-blue-500 text-sm font-medium">
+                                    View All <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6">
+                            {% if my_orders %}
+                                <div class="space-y-4 max-h-96 overflow-y-auto">
+                                    {% for order in my_orders|slice:":5" %}
+                                        <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                                            <img src="{{ order.dog.image.url }}" alt="{{ order.dog.name }}" 
+                                                 class="w-12 h-12 rounded-lg object-cover">
+                                            <div class="flex-1">
+                                                <h3 class="font-semibold text-gray-900">{{ order.dog.name }}</h3>
+                                                <p class="text-gray-600 text-sm">{{ order.dog.seller.full_name }}</p>
+                                                <div class="flex items-center space-x-2 mt-1">
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                                        {% if order.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                                        {% elif order.status == 'confirmed' %}bg-green-100 text-green-800
+                                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                        {{ order.get_status_display }}
+                                                    </span>
+                                                    <span class="text-xs text-gray-500">
+                                                        {{ order.created_at|timesince }} ago
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="font-semibold text-gray-900">${{ order.dog.price }}</div>
+                                                <a href="{% url 'messaging:inbox' %}" 
+                                                   class="text-primary-600 hover:text-primary-500 text-sm">
+                                                    <i class="fas fa-envelope"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-8">
+                                    <i class="fas fa-shopping-cart text-4xl text-gray-300 mb-4"></i>
+                                    <h3 class="text-lg font-semibold text-gray-500 mb-2">No orders yet</h3>
+                                    <p class="text-gray-400">Your orders will appear here when you make them</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endif %}
+
+<!-- Tips Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-gradient-to-r from-primary-500 to-primary-700 rounded-2xl p-8 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2">
+                        {% if user.is_seller %}
+                            Tips for Successful Selling
+                        {% else %}
+                            Tips for Finding Your Perfect Dog
+                        {% endif %}
+                    </h2>
+                    <p class="text-primary-100">
+                        {% if user.is_seller %}
+                            Make your listings stand out and attract serious buyers
+                        {% else %}
+                            Find the perfect furry companion for your family
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="hidden md:block">
+                    <i class="fas fa-lightbulb text-6xl text-primary-300"></i>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                {% if user.is_seller %}
+                    <div class="bg-primary-600 rounded-lg p-4">
+                        <i class="fas fa-camera text-2xl mb-2"></i>
+                        <h3 class="font-semibold mb-2">Great Photos</h3>
+                        <p class="text-sm text-primary-100">Use high-quality, well-lit photos that show your dog's personality</p>
+                    </div>
+                    <div class="bg-primary-600 rounded-lg p-4">
+                        <i class="fas fa-file-medical text-2xl mb-2"></i>
+                        <h3 class="font-semibold mb-2">Health Records</h3>
+                        <p class="text-sm text-primary-100">Keep vaccination and health records up to date and available</p>
+                    </div>
+                    <div class="bg-primary-600 rounded-lg p-4">
+                        <i class="fas fa-comments text-2xl mb-2"></i>
+                        <h3 class="font-semibold mb-2">Quick Response</h3>
+                        <p class="text-sm text-primary-100">Respond to inquiries promptly to build trust with buyers</p>
+                    </div>
+                {% else %}
+                    <div class="bg-primary-600 rounded-lg p-4">
+                        <i class="fas fa-search text-2xl mb-2"></i>
+                        <h3 class="font-semibold mb-2">Research Breeds</h3>
+                        <p class="text-sm text-primary-100">Learn about different breeds to find one that fits your lifestyle</p>
+                    </div>
+                    <div class="bg-primary-600 rounded-lg p-4">
+                        <i class="fas fa-users text-2xl mb-2"></i>
+                        <h3 class="font-semibold mb-2">Meet First</h3>
+                        <p class="text-sm text-primary-100">Always meet the dog and seller in person before making decisions</p>
+                    </div>
+                    <div class="bg-primary-600 rounded-lg p-4">
+                        <i class="fas fa-shield-alt text-2xl mb-2"></i>
+                        <h3 class="font-semibold mb-2">Stay Safe</h3>
+                        <p class="text-sm text-primary-100">Meet in public places and verify health records before purchasing</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

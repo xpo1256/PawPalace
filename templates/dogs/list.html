@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Browse Dogs - PawPalace{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                <i class="fas fa-dog mr-3"></i>
+                Find Your Perfect Companion
+            </h1>
+            <p class="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
+                Browse through {{ dogs|length }} adorable dogs looking for their forever homes
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Search and Filters -->
+<section class="bg-white shadow-lg -mt-8 relative z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <form method="GET" class="space-y-6">
+            <!-- Main Search -->
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" name="search" value="{{ current_search }}" 
+                           placeholder="Search by name, breed, or location..." 
+                           class="w-full px-6 py-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                </div>
+                <button type="submit" class="bg-primary-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-primary-600 transition duration-300">
+                    <i class="fas fa-search mr-2"></i>
+                    Search
+                </button>
+            </div>
+            
+            <!-- Advanced Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Breed</label>
+                    <select name="breed" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        <option value="">Any Breed</option>
+                        {% for breed in breeds %}
+                            <option value="{{ breed }}" {% if breed == current_breed %}selected{% endif %}>
+                                {{ breed|title }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                    <select name="gender" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        <option value="">Any Gender</option>
+                        <option value="male" {% if current_gender == 'male' %}selected{% endif %}>Male</option>
+                        <option value="female" {% if current_gender == 'female' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                    <select name="location" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        <option value="">Any Location</option>
+                        {% for location in locations %}
+                            <option value="{{ location }}" {% if location == current_location %}selected{% endif %}>
+                                {{ location }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                    <select name="sort" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        <option value="-created_at" {% if current_sort == '-created_at' %}selected{% endif %}>Newest First</option>
+                        <option value="created_at" {% if current_sort == 'created_at' %}selected{% endif %}>Oldest First</option>
+                        <option value="price" {% if current_sort == 'price' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="-price" {% if current_sort == '-price' %}selected{% endif %}>Price: High to Low</option>
+                        <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Name: A to Z</option>
+                        <option value="-name" {% if current_sort == '-name' %}selected{% endif %}>Name: Z to A</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Price Range and Health Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Min Price ($)</label>
+                    <input type="number" name="min_price" value="{{ request.GET.min_price }}" 
+                           placeholder="0" step="0.01" min="0"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Max Price ($)</label>
+                    <input type="number" name="max_price" value="{{ request.GET.max_price }}" 
+                           placeholder="10000" step="0.01" min="0"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                </div>
+                
+                <div class="flex items-center space-x-4 pt-8">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="vaccinated" value="true" {% if request.GET.vaccinated %}checked{% endif %}
+                               class="w-5 h-5 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500">
+                        <span class="ml-2 text-sm text-gray-700">Vaccinated</span>
+                    </label>
+                </div>
+                
+                <div class="flex items-center space-x-4 pt-8">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="neutered" value="true" {% if request.GET.neutered %}checked{% endif %}
+                               class="w-5 h-5 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500">
+                        <span class="ml-2 text-sm text-gray-700">Spayed/Neutered</span>
+                    </label>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Results Section -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Results Count -->
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-900">
+                {% if dogs %}
+                    {{ paginator.count }} Dog{{ paginator.count|pluralize }} Found
+                {% else %}
+                    No Dogs Found
+                {% endif %}
+            </h2>
+            
+            {% if user.is_authenticated and user.is_seller %}
+                <a href="{% url 'dogs:add' %}" 
+                   class="bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-600 transition duration-300">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Add Your Dog
+                </a>
+            {% endif %}
+        </div>
+        
+        <!-- Dogs Grid -->
+        {% if dogs %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {% for dog in dogs %}
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden card-hover">
+                        <div class="relative">
+                            <img src="{{ dog.image.url }}" alt="{{ dog.name }}" 
+                                 class="w-full h-64 object-cover">
+                            
+                            <!-- Status Badge -->
+                            <div class="absolute top-4 left-4">
+                                {% if dog.status == 'available' %}
+                                    <span class="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                        Available
+                                    </span>
+                                {% elif dog.status == 'pending' %}
+                                    <span class="bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                        Pending
+                                    </span>
+                                {% else %}
+                                    <span class="bg-gray-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                        Sold
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Favorite Button -->
+                            {% if user.is_authenticated %}
+                                <div class="absolute top-4 right-4">
+                                    <button onclick="toggleFavorite({{ dog.pk }})" 
+                                            class="bg-white text-red-500 p-2 rounded-full shadow-lg hover:bg-red-500 hover:text-white transition duration-300"
+                                            id="favorite-btn-{{ dog.pk }}">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Price -->
+                            <div class="absolute bottom-4 right-4">
+                                <span class="bg-primary-500 text-white px-3 py-1 rounded-full text-lg font-bold">
+                                    ${{ dog.price }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ dog.name }}</h3>
+                            <p class="text-gray-600 mb-2">
+                                <i class="fas fa-dog mr-1"></i> {{ dog.breed }}
+                            </p>
+                            <p class="text-gray-600 mb-2">
+                                <i class="fas fa-birthday-cake mr-1"></i> {{ dog.age_display }}
+                            </p>
+                            <p class="text-gray-600 mb-2">
+                                <i class="fas fa-venus-mars mr-1"></i> {{ dog.get_gender_display }}
+                            </p>
+                            <p class="text-gray-600 mb-4">
+                                <i class="fas fa-map-marker-alt mr-1"></i> {{ dog.location }}
+                            </p>
+                            
+                            <!-- Health Badges -->
+                            <div class="flex gap-2 mb-4">
+                                {% if dog.is_vaccinated %}
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                                        <i class="fas fa-shield-alt mr-1"></i> Vaccinated
+                                    </span>
+                                {% endif %}
+                                {% if dog.is_neutered %}
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                                        <i class="fas fa-check-circle mr-1"></i> Neutered
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="flex gap-2">
+                                <a href="{{ dog.get_absolute_url }}" 
+                                   class="flex-1 bg-primary-500 text-white text-center py-2 px-4 rounded-lg hover:bg-primary-600 transition duration-300">
+                                    <i class="fas fa-eye mr-1"></i> View Details
+                                </a>
+                                <button class="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition duration-300"
+                                        data-share-dog
+                                        data-dog-name="{{ dog.name }}"
+                                        data-dog-url="{{ request.scheme }}://{{ request.get_host }}{{ dog.get_absolute_url }}"
+                                        data-dog-price="{{ dog.price }}"
+                                        data-dog-breed="{{ dog.breed }}">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <div class="flex justify-center mt-12">
+                    <nav class="flex items-center space-x-2">
+                        {% if page_obj.has_previous %}
+                            <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                               class="px-4 py-2 text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300">
+                                First
+                            </a>
+                            <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                               class="px-4 py-2 text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        {% endif %}
+                        
+                        <span class="px-4 py-2 text-gray-700 bg-primary-500 text-white border border-primary-500 rounded-lg">
+                            {{ page_obj.number }}
+                        </span>
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                               class="px-4 py-2 text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                               class="px-4 py-2 text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300">
+                                Last
+                            </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            {% endif %}
+        {% else %}
+            <!-- No Results -->
+            <div class="text-center py-16">
+                <i class="fas fa-search text-6xl text-gray-300 mb-6"></i>
+                <h3 class="text-2xl font-semibold text-gray-500 mb-4">No Dogs Found</h3>
+                <p class="text-gray-400 mb-8">Try adjusting your search criteria or browse all available dogs.</p>
+                <a href="{% url 'dogs:list' %}" 
+                   class="bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-600 transition duration-300 inline-block">
+                    <i class="fas fa-refresh mr-2"></i>
+                    Clear Filters
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- JavaScript -->
+<script>
+    function toggleFavorite(dogId) {
+        fetch(`/dogs/${dogId}/favorite/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            const btn = document.getElementById(`favorite-btn-${dogId}`);
+            if (data.is_favorited) {
+                btn.classList.add('bg-red-500', 'text-white');
+                btn.classList.remove('bg-white', 'text-red-500');
+            } else {
+                btn.classList.add('bg-white', 'text-red-500');
+                btn.classList.remove('bg-red-500', 'text-white');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+    
+    // Share functionality is now handled by share.js
+</script>
+
+<!-- Share functionality -->
+<script src="{% static 'js/share.js' %}"></script>
+{% endblock %}

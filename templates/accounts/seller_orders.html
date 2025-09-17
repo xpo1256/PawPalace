@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Orders - Dog Marketplace{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Orders for My Dogs</h1>
+                    <p class="text-gray-600 mt-2">Manage orders from buyers interested in your dogs</p>
+                </div>
+                <a href="{% url 'accounts:dashboard' %}" 
+                   class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition duration-300">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Orders List -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            {% if orders %}
+                <!-- Orders Header -->
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-shopping-cart mr-2"></i>
+                            Orders ({{ orders|length }})
+                        </h2>
+                        <div class="flex items-center space-x-4 text-sm text-gray-600">
+                            <span class="flex items-center">
+                                <i class="fas fa-clock mr-1"></i>
+                                Pending: {{ orders|length }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Order Details
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Dog Information
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Buyer Information
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for order in orders %}
+                            <tr class="hover:bg-gray-50">
+                                <!-- Order Details -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        Order #{{ order.id }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        {{ order.created_at|date:"M j, Y" }} at {{ order.created_at|time:"g:i A" }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        ${{ order.dog.price|floatformat:0 }}
+                                    </div>
+                                </td>
+
+                                <!-- Dog Information -->
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-16 w-16">
+                                            {% if order.dog.image %}
+                                                <img class="h-16 w-16 rounded-lg object-cover" 
+                                                     src="{{ order.dog.image.url }}" 
+                                                     alt="{{ order.dog.name }}">
+                                            {% else %}
+                                                <div class="h-16 w-16 rounded-lg bg-gray-200 flex items-center justify-center">
+                                                    <i class="fas fa-dog text-gray-400 text-xl"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ order.dog.name }}
+                                            </div>
+                                            <div class="text-sm text-gray-500">
+                                                {{ order.dog.breed }}
+                                            </div>
+                                            <div class="text-sm text-gray-500">
+                                                {{ order.dog.age }} years old
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Buyer Information -->
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ order.buyer_name }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        {{ order.buyer_email }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        {{ order.buyer_phone }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        @{{ order.buyer.username }}
+                                    </div>
+                                </td>
+
+                                <!-- Status -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {% if order.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                        {% elif order.status == 'confirmed' %}bg-green-100 text-green-800
+                                        {% elif order.status == 'cancelled' %}bg-red-100 text-red-800
+                                        {% elif order.status == 'completed' %}bg-blue-100 text-blue-800
+                                        {% endif %}">
+                                        {% if order.status == 'pending' %}
+                                            <i class="fas fa-clock mr-1"></i>
+                                        {% elif order.status == 'confirmed' %}
+                                            <i class="fas fa-check mr-1"></i>
+                                        {% elif order.status == 'cancelled' %}
+                                            <i class="fas fa-times mr-1"></i>
+                                        {% elif order.status == 'completed' %}
+                                            <i class="fas fa-check-double mr-1"></i>
+                                        {% endif %}
+                                        {{ order.get_status_display }}
+                                    </span>
+                                </td>
+
+                                <!-- Actions -->
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex space-x-2">
+                                        <a href="{% url 'dogs:detail' order.dog.pk %}" 
+                                           class="text-primary-600 hover:text-primary-900">
+                                            <i class="fas fa-eye mr-1"></i>
+                                            View Dog
+                                        </a>
+                                        <a href="{% url 'messaging:conversation' order.dog.conversations.first.pk %}" 
+                                           class="text-blue-600 hover:text-blue-900">
+                                            <i class="fas fa-comments mr-1"></i>
+                                            Message
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Message from Buyer (if any) -->
+                            {% if order.message %}
+                            <tr class="bg-gray-50">
+                                <td colspan="5" class="px-6 py-4">
+                                    <div class="bg-white rounded-lg p-4 border-l-4 border-primary-500">
+                                        <div class="flex items-start">
+                                            <i class="fas fa-quote-left text-primary-500 mr-2 mt-1"></i>
+                                            <div>
+                                                <p class="text-sm text-gray-700 italic">
+                                                    "{{ order.message }}"
+                                                </p>
+                                                <p class="text-xs text-gray-500 mt-1">
+                                                    Message from {{ order.buyer_name }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <!-- Empty State -->
+                <div class="text-center py-12">
+                    <div class="mx-auto h-24 w-24 text-gray-400 mb-4">
+                        <i class="fas fa-shopping-cart text-6xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No Orders Yet</h3>
+                    <p class="text-gray-500 mb-6">
+                        You haven't received any orders for your dogs yet. 
+                        Make sure your dogs are listed and have good descriptions!
+                    </p>
+                    <div class="space-x-4">
+                        <a href="{% url 'dogs:add' %}" 
+                           class="bg-primary-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-700 transition duration-300">
+                            <i class="fas fa-plus mr-2"></i>
+                            Add New Dog
+                        </a>
+                        <a href="{% url 'dogs:list' %}" 
+                           class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition duration-300">
+                            <i class="fas fa-list mr-2"></i>
+                            View All Dogs
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Help Section -->
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <div class="flex items-start space-x-3">
+                <i class="fas fa-info-circle text-blue-600 text-xl mt-1"></i>
+                <div>
+                    <h3 class="font-semibold text-blue-800 mb-2">Managing Orders</h3>
+                    <div class="text-blue-700 text-sm space-y-1">
+                        <p>• <strong>Pending:</strong> New orders waiting for your response</p>
+                        <p>• <strong>Confirmed:</strong> Orders you've accepted</p>
+                        <p>• <strong>Cancelled:</strong> Orders that were cancelled</p>
+                        <p>• <strong>Completed:</strong> Successfully completed orders</p>
+                        <p>• Use the <strong>Message</strong> button to communicate with buyers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

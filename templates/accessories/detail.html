@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ accessory.name }} - Dog Marketplace{% endblock %}
+
+{% block content %}
+<section class="bg-gray-50 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-900">
+                {{ accessory.name }}
+            </h1>
+            <a href="{% url 'accessories:list' %}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Accessories
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <!-- Images -->
+            <div class="space-y-4">
+                <div class="aspect-w-16 aspect-h-12 bg-gray-200 rounded-xl overflow-hidden">
+                    {% if accessory.primary_image %}
+                        <img src="{{ accessory.primary_image.url }}" 
+                             alt="{{ accessory.name }}" 
+                             class="w-full h-96 object-cover">
+                    {% else %}
+                        <!-- Realistic images based on accessory name -->
+                        {% if 'food' in accessory.name|lower or 'chicken' in accessory.name|lower or 'rice' in accessory.name|lower %}
+                            <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=600&h=400&fit=crop" 
+                                 alt="{{ accessory.name }}" 
+                                 class="w-full h-96 object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif 'toy' in accessory.name|lower or 'puzzle' in accessory.name|lower %}
+                            <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=600&h=400&fit=crop" 
+                                 alt="{{ accessory.name }}" 
+                                 class="w-full h-96 object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif 'bed' in accessory.name|lower or 'comfort' in accessory.name|lower %}
+                            <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=400&fit=crop" 
+                                 alt="{{ accessory.name }}" 
+                                 class="w-full h-96 object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif 'grooming' in accessory.name|lower or 'health' in accessory.name|lower %}
+                            <img src="https://images.unsplash.com/photo-1612835362596-845cfdfe9d36?w=600&h=400&fit=crop" 
+                                 alt="{{ accessory.name }}" 
+                                 class="w-full h-96 object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif 'collar' in accessory.name|lower or 'safety' in accessory.name|lower %}
+                            <img src="https://images.unsplash.com/photo-1601758228059-0c3bb6e76d4c?w=600&h=400&fit=crop" 
+                                 alt="{{ accessory.name }}" 
+                                 class="w-full h-96 object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% elif 'raincoat' in accessory.name|lower or 'clothing' in accessory.name|lower %}
+                            <img src="https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=600&h=400&fit=crop" 
+                                 alt="{{ accessory.name }}" 
+                                 class="w-full h-96 object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=600&h=400&fit=crop" 
+                                 alt="{{ accessory.name }}" 
+                                 class="w-full h-96 object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% endif %}
+                        <!-- Fallback placeholder -->
+                        <div class="w-full h-96 bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center" style="display: none;">
+                            <i class="fas fa-paw text-white text-6xl"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if accessory.all_images|length > 1 %}
+                <div class="grid grid-cols-3 gap-4">
+                    {% for image in accessory.all_images %}
+                    <div class="aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg overflow-hidden">
+                        <img src="{{ image.url }}" 
+                             alt="{{ accessory.name }}" 
+                             class="w-full h-24 object-cover hover:opacity-75 transition duration-300">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Product Details -->
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
+                        {{ accessory.get_category_display }}
+                    </span>
+                    {% if accessory.brand %}
+                    <span class="text-sm text-gray-500">Brand: {{ accessory.brand }}</span>
+                    {% endif %}
+                </div>
+
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">{{ accessory.name }}</h2>
+                
+                <div class="text-4xl font-bold text-primary-600 mb-6">${{ accessory.price|floatformat:2 }}</div>
+
+                <div class="space-y-4 mb-8">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Description</h3>
+                        <p class="text-gray-600">{{ accessory.description }}</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        {% if accessory.size %}
+                        <div>
+                            <h4 class="font-medium text-gray-900">Size</h4>
+                            <p class="text-gray-600">{{ accessory.size }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if accessory.color %}
+                        <div>
+                            <h4 class="font-medium text-gray-900">Color</h4>
+                            <p class="text-gray-600">{{ accessory.color }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if accessory.material %}
+                        <div>
+                            <h4 class="font-medium text-gray-900">Material</h4>
+                            <p class="text-gray-600">{{ accessory.material }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if accessory.weight %}
+                        <div>
+                            <h4 class="font-medium text-gray-900">Weight</h4>
+                            <p class="text-gray-600">{{ accessory.weight }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <span class="font-medium text-gray-900">Availability:</span>
+                        {% if accessory.quantity > 0 %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            In Stock ({{ accessory.quantity }} available)
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <i class="fas fa-times-circle mr-1"></i>
+                            Out of Stock
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Seller Information -->
+                <div class="border-t border-gray-200 pt-6 mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-store text-primary-500 mr-2"></i>
+                        Seller Information
+                    </h3>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-primary-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">{{ accessory.seller.first_name }} {{ accessory.seller.last_name }}</p>
+                            <p class="text-sm text-gray-500">{{ accessory.seller.email }}</p>
+                            {% if accessory.seller.phone %}
+                            <p class="text-sm text-gray-500">{{ accessory.seller.phone }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex space-x-4">
+                    {% if user.is_authenticated and not user.is_seller %}
+                    <a href="{% url 'messaging:send_message' accessory.seller.pk %}" 
+                       class="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition duration-300 text-center">
+                        <i class="fas fa-envelope mr-2"></i> Contact Seller
+                    </a>
+                    {% elif not user.is_authenticated %}
+                    <a href="{% url 'accounts:login' %}" 
+                       class="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition duration-300 text-center">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Login to Contact Seller
+                    </a>
+                    {% endif %}
+                    
+                    <button onclick="window.history.back()" 
+                            class="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition duration-300">
+                        <i class="fas fa-arrow-left mr-2"></i> Back
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Accessories -->
+        {% if related_accessories %}
+        <div class="mt-16">
+            <h3 class="text-2xl font-bold text-gray-900 mb-8">Related Accessories</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for related in related_accessories %}
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
+                    <div class="aspect-w-16 aspect-h-12 bg-gray-200">
+                        {% if related.primary_image %}
+                            <img src="{{ related.primary_image.url }}" 
+                                 alt="{{ related.name }}" 
+                                 class="w-full h-48 object-cover group-hover:scale-105 transition duration-300">
+                        {% else %}
+                            <!-- Realistic images based on accessory name -->
+                            {% if 'food' in related.name|lower or 'chicken' in related.name|lower or 'rice' in related.name|lower %}
+                                <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=300&fit=crop" 
+                                     alt="{{ related.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% elif 'toy' in related.name|lower or 'puzzle' in related.name|lower %}
+                                <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop" 
+                                     alt="{{ related.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% elif 'bed' in related.name|lower or 'comfort' in related.name|lower %}
+                                <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop" 
+                                     alt="{{ related.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% elif 'grooming' in related.name|lower or 'health' in related.name|lower %}
+                                <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop" 
+                                     alt="{{ related.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% elif 'collar' in related.name|lower or 'safety' in related.name|lower %}
+                                <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop" 
+                                     alt="{{ related.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% elif 'raincoat' in related.name|lower or 'clothing' in related.name|lower %}
+                                <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop" 
+                                     alt="{{ related.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% else %}
+                                <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop" 
+                                     alt="{{ related.name }}" 
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% endif %}
+                            <!-- Fallback placeholder -->
+                            <div class="w-full h-48 bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center" style="display: none;">
+                                <i class="fas fa-paw text-white text-4xl"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="p-4">
+                        <h4 class="font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition duration-300">
+                            {{ related.name }}
+                        </h4>
+                        <div class="flex items-center justify-between">
+                            <span class="text-lg font-bold text-primary-600">${{ related.price|floatformat:2 }}</span>
+                            <a href="{% url 'accessories:detail' related.pk %}" 
+                               class="bg-primary-600 text-white px-3 py-1 rounded text-sm hover:bg-primary-700 transition duration-300">
+                                View
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
