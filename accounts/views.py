@@ -30,18 +30,8 @@ class UserRegistrationView(CreateView):
     success_url = reverse_lazy('home')
     
     def form_valid(self, form):
-        # Debug: Print all form data
-        print(f"DEBUG: Form data: {form.cleaned_data}")
-        print(f"DEBUG: POST data: {self.request.POST}")
-        
         response = super().form_valid(form)
         user = form.save()
-        
-        # Debug: Print the role that was selected
-        role = form.cleaned_data.get('role')
-        print(f"DEBUG: Selected role during registration: {role}")
-        print(f"DEBUG: User role after save: {user.role}")
-        print(f"DEBUG: User is_seller: {user.is_seller}")
         
         # Log the user in after registration
         username = form.cleaned_data.get('username')

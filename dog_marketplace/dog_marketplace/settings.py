@@ -85,6 +85,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
                 'accounts.context_processors.message_notifications',
+                'accessories.context_processors.cart_count',
             ],
         },
     },
