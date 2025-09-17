@@ -158,6 +158,10 @@ LOGOUT_REDIRECT_URL = '/'
 # Email (development)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# Payments (Stripe)
+STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', '')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 

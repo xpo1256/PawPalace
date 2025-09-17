@@ -4,6 +4,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import DetailView, ListView
+from collections import defaultdict
+import stripe
+from django.conf import settings
 
 from .forms import AccessoryForm, AccessorySearchForm
 from .models import Accessory, AccessoryFavorite
@@ -231,5 +234,107 @@ def remove_from_cart(request, pk):
         request.session['cart'] = cart
         messages.info(request, f'Removed "{accessory.name}" from cart.')
     return redirect('accessories:cart')
+
+
+@login_required
+def checkout_view(request):
+    cart = _get_cart(request.session)
+    if not cart:
+        messages.info(request, 'Your cart is empty.')
+        return redirect('accessories:cart')
+
+    ids = [int(_id) for _id in cart.keys()]
+    accessories = Accessory.objects.filter(id__in=ids, is_available=True, is_approved=True).select_related('seller')
+
+    # Group items by seller for messaging-based checkout
+    grouped = defaultdict(list)
+    for accessory in accessories:
+        grouped[accessory.seller].append({
+            'accessory': accessory,
+            'quantity': int(cart.get(str(accessory.id), 1)),
+        })
+
+    if request.method == 'POST':
+        # On submit, redirect to messaging with a prefilled subject/content per seller
+        seller_id = request.POST.get('seller_id')
+        try:
+            seller_id = int(seller_id)
+        except Exception:
+            seller_id = None
+        if not seller_id:
+            return redirect('accessories:checkout')
+
+        # Build a summary message for that seller
+        lines = []
+        for item in grouped.get(next(s for s in grouped.keys() if s.id == seller_id), []):
+            a = item['accessory']
+            qty = item['quantity']
+            lines.append(f"- {a.name} x{qty} (${a.price})")
+        content = "Hello! I'd like to buy the following accessories from my cart:\n" + "\n".join(lines)
+        request.session['prefill_message'] = content
+        return redirect('messaging:start_conversation', user_pk=seller_id)
+
+    return render(request, 'accessories/checkout.html', {
+        'grouped_items': grouped,
+    })
+
+
+@login_required
+def checkout_pay(request):
+    # Create a single Stripe Checkout Session for all items (MVP)
+    cart = _get_cart(request.session)
+    if not cart:
+        messages.info(request, 'Your cart is empty.')
+        return redirect('accessories:cart')
+
+    ids = [int(_id) for _id in cart.keys()]
+    accessories = Accessory.objects.filter(id__in=ids, is_available=True, is_approved=True)
+
+    if not settings.STRIPE_SECRET_KEY:
+        messages.error(request, 'Payment is not configured. Contact support.')
+        return redirect('accessories:checkout')
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    line_items = []
+    for accessory in accessories:
+        qty = int(cart.get(str(accessory.id), 1))
+        line_items.append({
+            'price_data': {
+                'currency': 'usd',
+                'product_data': {
+                    'name': accessory.name,
+                },
+                'unit_amount': int(float(accessory.price) * 100),
+            },
+            'quantity': max(1, qty),
+        })
+
+    try:
+        session = stripe.checkout.Session.create(
+            mode='payment',
+            payment_method_types=['card'],
+            line_items=line_items,
+            success_url=request.build_absolute_uri(reverse('accessories:checkout_success')),
+            cancel_url=request.build_absolute_uri(reverse('accessories:checkout_cancel')),
+            customer_email=request.user.email or None,
+            metadata={'user_id': str(request.user.id)},
+        )
+    except Exception as e:
+        messages.error(request, f'Payment error: {e}')
+        return redirect('accessories:checkout')
+
+    return redirect(session.url)
+
+
+def checkout_success(request):
+    # Clear cart on success
+    request.session['cart'] = {}
+    return render(request, 'accessories/checkout_success.html')
+
+
+def checkout_cancel(request):
+    messages.info(request, 'Payment cancelled.')
+    return render(request, 'accessories/checkout_cancel.html')
 
 
