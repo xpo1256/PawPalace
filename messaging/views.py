@@ -82,14 +82,11 @@ def send_message(request, dog_pk):
     if request.method == 'POST':
         form = MessageForm(request.POST)
         if form.is_valid():
-            # Get or create conversation
-            conversation, created = Conversation.objects.get_or_create(
-                dog=dog,
-                defaults={'dog': dog}
-            )
-            
-            # Add participants if conversation was just created
-            if created:
+            # Find an existing conversation scoped to this buyer, seller, and dog
+            conversation = Conversation.objects.filter(dog=dog)
+            conversation = conversation.filter(participants=request.user).filter(participants=dog.seller).first()
+            if not conversation:
+                conversation = Conversation.objects.create(dog=dog)
                 conversation.participants.add(request.user, dog.seller)
             
             # Create message
@@ -126,10 +123,8 @@ def create_conversation(request, user_pk):
         messages.error(request, 'You cannot start a conversation with yourself.')
         return redirect('home')
     
-    # Check if conversation already exists
-    existing_conversation = Conversation.objects.filter(
-        participants=request.user
-    ).filter(participants=other_user).first()
+    # Check if a direct conversation already exists between the two users (no dog context)
+    existing_conversation = Conversation.objects.filter(participants=request.user).filter(participants=other_user, dog__isnull=True).first()
     
     if existing_conversation:
         return redirect('messaging:conversation', pk=existing_conversation.pk)

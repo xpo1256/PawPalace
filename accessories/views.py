@@ -75,6 +75,10 @@ class AccessoryDetailView(DetailView):
 
 @login_required
 def add_accessory(request):
+    # Only sellers can add accessories
+    if not request.user.is_authenticated or not request.user.is_seller:
+        messages.error(request, 'Only sellers can add accessories.')
+        return redirect('accessories:list')
     if request.method == 'POST':
         form = AccessoryForm(request.POST, request.FILES)
         if form.is_valid():
@@ -216,6 +220,12 @@ def update_cart(request, pk):
     accessory = get_object_or_404(Accessory, pk=pk)
     qty = int(request.POST.get('quantity', 1))
     qty = max(0, qty)
+    # Clamp to available stock if provided
+    if accessory.quantity is not None:
+        try:
+            qty = min(qty, int(accessory.quantity))
+        except Exception:
+            pass
     cart = _get_cart(request.session)
     if qty == 0:
         cart.pop(str(accessory.id), None)
