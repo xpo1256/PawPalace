@@ -141,3 +141,16 @@ def toggle_accessory_favorite(request, pk):
     })
 
 
+@login_required
+def favorite_accessories(request):
+    if request.user.is_seller:
+        messages.error(request, 'Sellers cannot access accessories favorites. Only buyers can favorite accessories.')
+        return redirect('accounts:dashboard')
+
+    favorites = AccessoryFavorite.objects.filter(user=request.user).select_related('accessory', 'accessory__seller').order_by('-created_at')
+
+    return render(request, 'accessories/favorites.html', {
+        'favorites': favorites,
+    })
+
+

@@ -12,4 +12,5 @@ urlpatterns = [
     path('delete/<int:pk>/', views.delete_accessory, name='delete'),
     path('my-accessories/', views.my_accessories, name='my_accessories'),
     path('<int:pk>/favorite/', views.toggle_accessory_favorite, name='toggle_favorite'),
+    path('favorites/', views.favorite_accessories, name='favorites'),
 ]
