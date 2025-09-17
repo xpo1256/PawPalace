@@ -122,25 +122,52 @@
                                     </div>
                                 </td>
 
-                                <!-- Status -->
+                                <!-- Status with Timeline -->
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                        {% if order.status == 'pending' %}bg-yellow-100 text-yellow-800
-                                        {% elif order.status == 'confirmed' %}bg-green-100 text-green-800
-                                        {% elif order.status == 'cancelled' %}bg-red-100 text-red-800
-                                        {% elif order.status == 'completed' %}bg-blue-100 text-blue-800
-                                        {% endif %}">
-                                        {% if order.status == 'pending' %}
-                                            <i class="fas fa-clock mr-1"></i>
-                                        {% elif order.status == 'confirmed' %}
-                                            <i class="fas fa-check mr-1"></i>
-                                        {% elif order.status == 'cancelled' %}
-                                            <i class="fas fa-times mr-1"></i>
-                                        {% elif order.status == 'completed' %}
-                                            <i class="fas fa-check-double mr-1"></i>
-                                        {% endif %}
-                                        {{ order.get_status_display }}
-                                    </span>
+                                    <div class="mb-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            {% if order.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                            {% elif order.status == 'confirmed' %}bg-green-100 text-green-800
+                                            {% elif order.status == 'cancelled' %}bg-red-100 text-red-800
+                                            {% elif order.status == 'completed' %}bg-blue-100 text-blue-800
+                                            {% endif %}">
+                                            {% if order.status == 'pending' %}
+                                                <i class="fas fa-clock mr-1"></i>
+                                            {% elif order.status == 'confirmed' %}
+                                                <i class="fas fa-check mr-1"></i>
+                                            {% elif order.status == 'cancelled' %}
+                                                <i class="fas fa-times mr-1"></i>
+                                            {% elif order.status == 'completed' %}
+                                                <i class="fas fa-check-double mr-1"></i>
+                                            {% endif %}
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </div>
+                                    <ol class="flex items-center w-full text-xs">
+                                        <li class="flex-1 flex items-center">
+                                            <span class="w-6 h-6 rounded-full flex items-center justify-center text-white {{ 'bg-yellow-500' if order.status == 'pending' else 'bg-green-500' if order.status in 'confirmed completed' else 'bg-gray-300' }}">
+                                                <i class="fas fa-file-alt"></i>
+                                            </span>
+                                            <div class="flex-1 h-1 mx-2 {{ 'bg-yellow-300' if order.status == 'pending' else 'bg-green-400' if order.status in 'confirmed completed' else 'bg-gray-200' }}"></div>
+                                        </li>
+                                        <li class="flex-1 flex items-center">
+                                            <span class="w-6 h-6 rounded-full flex items-center justify-center text-white {{ 'bg-green-500' if order.status in 'confirmed completed' else 'bg-gray-300' }}">
+                                                <i class="fas fa-handshake"></i>
+                                            </span>
+                                            <div class="flex-1 h-1 mx-2 {{ 'bg-blue-300' if order.shipment_status and order.shipment_status != 'none' else 'bg-gray-200' }}"></div>
+                                        </li>
+                                        <li class="flex-1 flex items-center">
+                                            <span class="w-6 h-6 rounded-full flex items-center justify-center text-white {{ 'bg-blue-500' if order.shipment_status and order.shipment_status != 'none' else 'bg-gray-300' }}">
+                                                <i class="fas fa-truck"></i>
+                                            </span>
+                                            <div class="flex-1 h-1 mx-2 {{ 'bg-blue-300' if order.shipment_status in 'shipped in_transit delivered' else 'bg-gray-200' }}"></div>
+                                        </li>
+                                        <li class="flex items-center">
+                                            <span class="w-6 h-6 rounded-full flex items-center justify-center text-white {{ 'bg-blue-600' if order.status == 'completed' else 'bg-gray-300' }}">
+                                                <i class="fas fa-flag-checkered"></i>
+                                            </span>
+                                        </li>
+                                    </ol>
                                     {% if order.shipment_status != 'none' %}
                                     <div class="text-xs text-gray-500 mt-1">
                                         {{ order.get_shipment_status_display }}{% if order.tracking_number %} • {{ order.carrier }} {{ order.tracking_number }}{% endif %}

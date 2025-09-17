@@ -304,6 +304,15 @@
                 btn.classList.add('bg-white', 'text-red-500');
                 btn.classList.remove('bg-red-500', 'text-white');
             }
+
+            // Toast feedback
+            var toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-lg shadow-lg bg-gray-900 text-white';
+            toast.setAttribute('role', 'status');
+            toast.setAttribute('aria-live', 'polite');
+            toast.textContent = data.message || (data.is_favorited ? 'Added to favorites' : 'Removed from favorites');
+            document.body.appendChild(toast);
+            setTimeout(function(){ if (toast.parentNode){ toast.parentNode.removeChild(toast); } }, 2200);
         })
         .catch(error => console.error('Error:', error));
     }

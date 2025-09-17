@@ -302,6 +302,21 @@ function bindAccessoryFavoriteToggles(){
                 if (data && typeof data.is_favorited !== 'undefined'){
                     btn.classList.toggle('bg-red-100', data.is_favorited);
                     btn.classList.toggle('text-red-600', data.is_favorited);
+                    // Update adjacent count if present
+                    var countEl = btn.querySelector('.js-acc-fav-count') || btn.closest('[data-acc-card]')?.querySelector('.js-acc-fav-count');
+                    if (countEl && typeof data.favorites_count !== 'undefined'){
+                        countEl.textContent = data.favorites_count;
+                    }
+                    // Accessible toast feedback
+                    var toast = document.createElement('div');
+                    toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-lg shadow-lg bg-gray-900 text-white';
+                    toast.setAttribute('role', 'status');
+                    toast.setAttribute('aria-live', 'polite');
+                    toast.textContent = data.message || (data.is_favorited ? 'Added to favorites' : 'Removed from favorites');
+                    document.body.appendChild(toast);
+                    setTimeout(function(){
+                        if (toast && toast.parentNode){ toast.parentNode.removeChild(toast); }
+                    }, 2200);
                 }
             }).catch(function(){ /* ignore */ });
         });

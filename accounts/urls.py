@@ -14,6 +14,8 @@ urlpatterns = [
     path('orders/', views.orders, name='orders'),
     path('seller-orders/', views.seller_orders, name='seller_orders'),
     path('seller/<int:pk>/', views.seller_profile, name='seller_profile'),
+    # Notifications polling endpoint
+    path('notifications/poll/', views.notifications_poll, name='notifications_poll'),
     # Password reset
     path('password-reset/', auth_views.PasswordResetView.as_view(
         template_name='accounts/password_reset_form.html',

@@ -144,6 +144,55 @@
                                 </div>
                             </div>
                             
+                            <!-- Order Status Timeline -->
+                            <div class="mt-4">
+                                {% comment %} Map statuses to step index {% endcomment %}
+                                {% with step=0 %}
+                                    {% if order.status == 'pending' %}{% with step=1 %}{% endwith %}
+                                    {% elif order.status == 'confirmed' %}{% with step=2 %}{% endwith %}
+                                    {% elif order.status == 'completed' %}{% with step=4 %}{% endwith %}
+                                    {% elif order.status == 'cancelled' %}{% with step=0 %}{% endwith %}
+                                    {% endif %}
+                                {% endwith %}
+                                <ol class="flex items-center w-full text-sm">
+                                    {% with s=order.status %}
+                                    <li class="flex-1 flex items-center">
+                                        <div class="flex items-center">
+                                            <span class="w-8 h-8 rounded-full flex items-center justify-center text-white {{ 'bg-yellow-500' if s == 'pending' else 'bg-green-500' if s in 'confirmed completed' else 'bg-gray-300' }}">
+                                                <i class="fas fa-file-alt"></i>
+                                            </span>
+                                            <span class="ml-2 text-gray-700">Requested</span>
+                                        </div>
+                                        <div class="flex-1 h-1 mx-3 {{ 'bg-yellow-300' if s == 'pending' else 'bg-green-400' if s in 'confirmed completed' else 'bg-gray-200' }}"></div>
+                                    </li>
+                                    <li class="flex-1 flex items-center">
+                                        <div class="flex items-center">
+                                            <span class="w-8 h-8 rounded-full flex items-center justify-center text-white {{ 'bg-green-500' if s in 'confirmed completed' else 'bg-gray-300' }}">
+                                                <i class="fas fa-handshake"></i>
+                                            </span>
+                                            <span class="ml-2 text-gray-700">Confirmed</span>
+                                        </div>
+                                        <div class="flex-1 h-1 mx-3 {{ 'bg-green-400' if s == 'completed' else 'bg-gray-200' }}"></div>
+                                    </li>
+                                    <li class="flex-1 flex items-center">
+                                        <div class="flex items-center">
+                                            <span class="w-8 h-8 rounded-full flex items-center justify-center text-white {{ 'bg-blue-500' if order.shipment_status and order.shipment_status != 'none' else 'bg-gray-300' }}">
+                                                <i class="fas fa-truck"></i>
+                                            </span>
+                                            <span class="ml-2 text-gray-700">In Transit</span>
+                                        </div>
+                                        <div class="flex-1 h-1 mx-3 {{ 'bg-blue-300' if order.shipment_status and order.shipment_status in 'shipped in_transit delivered' else 'bg-gray-200' }}"></div>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="w-8 h-8 rounded-full flex items-center justify-center text-white {{ 'bg-blue-600' if s == 'completed' else 'bg-gray-300' }}">
+                                            <i class="fas fa-flag-checkered"></i>
+                                        </span>
+                                        <span class="ml-2 text-gray-700">Completed</span>
+                                    </li>
+                                    {% endwith %}
+                                </ol>
+                            </div>
+
                             <!-- Health Information -->
                             <div class="bg-gray-50 rounded-lg p-4 mb-4">
                                 <h4 class="font-semibold text-gray-900 mb-2">Health Information</h4>

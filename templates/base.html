@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -7,6 +8,8 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>{% block title %}PawPalace - Find Your Perfect Furry Friend{% endblock %}</title>
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <meta name="theme-color" content="#667eea">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -136,6 +139,14 @@
                                 </span>
                             {% endif %}
                         </a>
+                        {% if not user.is_seller %}
+                        <a href="{% url 'accounts:favorites' %}" class="text-gray-700 hover:text-primary-500 transition duration-300 relative">
+                            <i class="fas fa-heart mr-1"></i> Favorites
+                            {% if favorites_count and favorites_count > 0 %}
+                                <span class="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full h-5 min-w-[1.25rem] px-1 flex items-center justify-center">{{ favorites_count }}</span>
+                            {% endif %}
+                        </a>
+                        {% endif %}
                         <div class="relative group">
                             <button class="flex items-center space-x-2 text-gray-700 hover:text-primary-500 transition duration-300">
                                 {% if user.profile_image %}
@@ -245,6 +256,14 @@
                             </span>
                         {% endif %}
                     </a>
+                    {% if not user.is_seller %}
+                    <a href="{% url 'accounts:favorites' %}" class="block px-3 py-2 text-gray-700 hover:text-primary-500 transition duration-300 relative">
+                        <i class="fas fa-heart mr-2"></i> Favorites
+                        {% if favorites_count and favorites_count > 0 %}
+                            <span class="absolute top-2 right-2 bg-pink-500 text-white text-xs rounded-full h-5 min-w-[1.25rem] px-1 flex items-center justify-center">{{ favorites_count }}</span>
+                        {% endif %}
+                    </a>
+                    {% endif %}
                     <a href="{% url 'accounts:profile' %}" class="block px-3 py-2 text-gray-700 hover:text-primary-500 transition duration-300">
                         <i class="fas fa-user mr-2"></i> Profile
                     </a>
@@ -391,6 +410,50 @@
                 }
             });
         });
+
+        // Browser Notifications (for phones and desktop)
+        (function(){
+            if (!('Notification' in window)) { return; }
+            if (Notification.permission === 'default') {
+                // Ask once after small delay
+                setTimeout(function(){ Notification.requestPermission().catch(function(){}); }, 2000);
+            }
+
+            var lastCounts = { unread_messages: 0, seller_pending_orders: 0, my_items_favorited_count: 0 };
+            function poll(){
+                fetch('{% url 'accounts:notifications_poll' %}', { credentials: 'same-origin' })
+                    .then(function(r){ return r.ok ? r.json() : null; })
+                    .then(function(data){
+                        if (!data) return;
+                        // Messages
+                        if (data.unread_messages > lastCounts.unread_messages && Notification.permission === 'granted'){
+                            new Notification('New message', { body: 'You have a new message on PawPalace', icon: '/static/favicon.ico' });
+                        }
+                        // Orders for seller
+                        if (data.seller_pending_orders > lastCounts.seller_pending_orders && Notification.permission === 'granted'){
+                            new Notification('New order request', { body: 'You received a new order for your dog', icon: '/static/favicon.ico' });
+                        }
+                        // Favorites on my items (seller)
+                        if (data.my_items_favorited_count > lastCounts.my_items_favorited_count && Notification.permission === 'granted' && {{ user.is_authenticated|yesno:'true,false' }} && {{ user.is_seller|yesno:'true,false' }}){
+                            new Notification('New favorite', { body: 'Someone favorited your listing', icon: '/static/favicon.ico' });
+                        }
+                        lastCounts = data;
+                    }).catch(function(){});
+            }
+            // Poll every 30s while tab is visible
+            var intervalId;
+            function start(){ if (!intervalId){ intervalId = setInterval(poll, 30000); poll(); } }
+            function stop(){ if (intervalId){ clearInterval(intervalId); intervalId = null; } }
+            document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') start(); else stop(); });
+            if (document.visibilityState === 'visible') start();
+        })();
+
+        // Service Worker registration for PWA
+        if ('serviceWorker' in navigator){
+            window.addEventListener('load', function(){
+                navigator.serviceWorker.register('{% static 'js/sw.js' %}').catch(function(){});
+            });
+        }
     </script>
     
     {% block extra_js %}{% endblock %}

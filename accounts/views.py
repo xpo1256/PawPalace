@@ -11,6 +11,7 @@ from .forms import UserRegistrationForm, UserProfileForm
 from .forms import SellerReviewForm
 from dogs.models import Dog, Favorite, Order
 from accessories.models import Accessory
+from django.http import JsonResponse
 
 
 class CustomLoginView(LoginView):
@@ -206,3 +207,34 @@ class CustomLogoutView(LogoutView):
     def dispatch(self, request, *args, **kwargs):
         messages.success(request, 'You have been successfully logged out.')
         return super().dispatch(request, *args, **kwargs)
+
+
+@login_required
+def notifications_poll(request):
+    """Lightweight polling endpoint for client notifications.
+    Returns counts for unread messages, pending orders (for sellers), and favorites on user's items.
+    """
+    from messaging.models import Message
+    data = {
+        'unread_messages': 0,
+        'seller_pending_orders': 0,
+        'my_items_favorited_count': 0,
+    }
+
+    # Unread messages for any user
+    data['unread_messages'] = Message.objects.filter(receiver=request.user, is_read=False).count()
+
+    # Seller-specific: pending orders for their dogs
+    if request.user.is_seller:
+        data['seller_pending_orders'] = Order.objects.filter(dog__seller=request.user, status='pending').count()
+        # Favorites on seller's dogs
+        data['my_items_favorited_count'] = Favorite.objects.filter(dog__seller=request.user).count()
+    else:
+        # Buyer: favorites they have added (for badge updates)
+        try:
+            from accessories.models import AccessoryFavorite
+            data['my_items_favorited_count'] = Favorite.objects.filter(user=request.user).count() + AccessoryFavorite.objects.filter(user=request.user).count()
+        except Exception:
+            data['my_items_favorited_count'] = Favorite.objects.filter(user=request.user).count()
+
+    return JsonResponse(data)
