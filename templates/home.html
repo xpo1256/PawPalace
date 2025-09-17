@@ -86,11 +86,15 @@
                                 Available
                             </span>
                         </div>
+                        {% if user.is_authenticated and not user.is_seller %}
                         <div class="absolute top-4 right-4">
-                            <button class="bg-white text-red-500 p-2 rounded-full shadow-lg hover:bg-red-500 hover:text-white transition duration-300">
+                            <button onclick="toggleFavorite({{ dog.pk }})"
+                                    class="bg-white text-red-500 p-2 rounded-full shadow-lg hover:bg-red-500 hover:text-white transition duration-300"
+                                    id="favorite-btn-{{ dog.pk }}">
                                 <i class="fas fa-heart"></i>
                             </button>
                         </div>
+                        {% endif %}
                         <div class="absolute bottom-4 right-4">
                             <span class="bg-primary-500 text-white px-3 py-1 rounded-full text-lg font-bold">
                                 ${{ dog.price }}
@@ -477,7 +481,31 @@
     
 </style>
 
-<!-- Share functionality -->
+<!-- Favorite and Share functionality -->
+<script>
+function toggleFavorite(dogId) {
+    fetch(`/dogs/${dogId}/favorite/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        const btn = document.getElementById(`favorite-btn-${dogId}`);
+        if (!btn) return;
+        if (data.is_favorited) {
+            btn.classList.add('bg-red-500', 'text-white');
+            btn.classList.remove('bg-white', 'text-red-500');
+        } else {
+            btn.classList.add('bg-white', 'text-red-500');
+            btn.classList.remove('bg-red-500', 'text-white');
+        }
+    })
+    .catch(() => {});
+}
+</script>
 <script src="{% static 'js/share.js' %}"></script>
 
 {% endblock %}
