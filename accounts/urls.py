@@ -12,4 +12,5 @@ urlpatterns = [
     path('favorites/', views.favorites, name='favorites'),
     path('orders/', views.orders, name='orders'),
     path('seller-orders/', views.seller_orders, name='seller_orders'),
+    path('seller/<int:pk>/', views.seller_profile, name='seller_profile'),
 ]

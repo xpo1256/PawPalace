@@ -9,6 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import User
 from .forms import UserRegistrationForm, UserProfileForm
 from dogs.models import Dog, Favorite, Order
+from accessories.models import Accessory
 
 
 class CustomLoginView(LoginView):
@@ -160,6 +161,26 @@ def seller_orders(request):
     return render(request, 'accounts/seller_orders.html', {
         'orders': orders_list
     })
+
+
+def seller_profile(request, pk):
+    """Public seller profile page with listings"""
+    seller = User.objects.filter(pk=pk, role='seller').first()
+    if not seller:
+        messages.error(request, 'Seller not found.')
+        return redirect('home')
+
+    seller_dogs = Dog.objects.filter(seller=seller, status='available').order_by('-created_at')
+    seller_accessories = Accessory.objects.filter(seller=seller, is_available=True).order_by('-created_at')
+
+    context = {
+        'seller_user': seller,
+        'seller_dogs': seller_dogs,
+        'seller_accessories': seller_accessories,
+        'total_dogs': seller_dogs.count(),
+        'total_accessories': seller_accessories.count(),
+    }
+    return render(request, 'accounts/seller_profile.html', context)
 
 
 class CustomLogoutView(LogoutView):
