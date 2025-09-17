@@ -160,7 +160,11 @@
                             <i class="fas fa-user text-primary-600"></i>
                         </div>
                         <div>
-                            <p class="font-medium text-gray-900">{{ accessory.seller.first_name }} {{ accessory.seller.last_name }}</p>
+                            <p class="font-medium text-gray-900">
+                                <a href="{% url 'accounts:seller_profile' accessory.seller.pk %}" class="hover:text-primary-600">
+                                    {{ accessory.seller.first_name }} {{ accessory.seller.last_name }}
+                                </a>
+                            </p>
                             <p class="text-sm text-gray-500">{{ accessory.seller.email }}</p>
                             {% if accessory.seller.phone %}
                             <p class="text-sm text-gray-500">{{ accessory.seller.phone }}</p>
