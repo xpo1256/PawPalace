@@ -70,7 +70,7 @@ MIDDLEWARE = [
 # Allow embedding site in React Native WebView (Expo) for dev
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-ROOT_URLCONF = 'dog_marketplace.urls'
+ROOT_URLCONF = 'dog_marketplace.dog_marketplace.urls'
 
 TEMPLATES = [
     {
@@ -90,7 +90,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'dog_marketplace.wsgi.application'
+WSGI_APPLICATION = 'dog_marketplace.dog_marketplace.wsgi.application'
 
 
 # Database
@@ -140,7 +140,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
+    BASE_DIR.parent / 'static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
