@@ -114,8 +114,7 @@ class DogForm(forms.ModelForm):
         image = cleaned.get('image')
         image_url = cleaned.get('image_url')
         # Require at least one of upload or URL
-        if not image and not image_url:
-            raise forms.ValidationError('Please upload a photo or provide an Image URL.')
+        # Not required; allow creating listing without image
         return cleaned
 
     def clean_age(self):

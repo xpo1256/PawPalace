@@ -46,7 +46,7 @@ class Dog(models.Model):
     health_certificate = models.FileField(upload_to='health_certificates/', blank=True, null=True)
     
     # Images
-    image = models.ImageField(upload_to='dogs/')
+    image = models.ImageField(upload_to='dogs/', blank=True, null=True)
     image2 = models.ImageField(upload_to='dogs/', blank=True, null=True)
     image3 = models.ImageField(upload_to='dogs/', blank=True, null=True)
     image4 = models.ImageField(upload_to='dogs/', blank=True, null=True)
