@@ -13,7 +13,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-import dj_database_url
+# dj-database-url is optional in local dev; handle missing import gracefully
+try:
+    import dj_database_url as _djdb
+except Exception:
+    _djdb = None
 
 # Load environment variables from .env if present
 load_dotenv(os.path.join(Path(__file__).resolve().parent.parent.parent, '.env'))
@@ -102,9 +106,18 @@ _known_schemes = (
     'sqlite://', 'mssql://', 'oracle://', 'redshift://',
 )
 if _db_url and any(_db_url.startswith(s) for s in _known_schemes):
-    DATABASES = {
-        'default': dj_database_url.parse(_db_url, conn_max_age=600)
-    }
+    if _djdb is not None:
+        DATABASES = {
+            'default': _djdb.parse(_db_url, conn_max_age=600)
+        }
+    else:
+        # If library missing locally, fall back to sqlite to avoid crashes
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 else:
     # Fallback to SQLite if DATABASE_URL is missing/malformed (e.g., '://')
     DATABASES = {
