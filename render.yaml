@@ -10,7 +10,7 @@ services:
     name: pawpalace
     runtime: python
     buildCommand: './build.sh'
-    startCommand: 'python -m gunicorn dog_marketplace.dog_marketplace.asgi:application -k uvicorn.workers.UvicornWorker'
+    startCommand: 'python -m gunicorn dog_marketplace.dog_marketplace.asgi:application -k uvicorn.workers.UvicornWorker -b 0.0.0.0:$PORT'
     envVars:
       - key: DATABASE_URL
         fromDatabase:
