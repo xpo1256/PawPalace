@@ -95,12 +95,24 @@ WSGI_APPLICATION = 'dog_marketplace.dog_marketplace.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
-        conn_max_age=600,
-    )
-}
+_db_url = os.environ.get('DATABASE_URL', '').strip()
+_known_schemes = (
+    'postgres://', 'postgresql://', 'pgsql://',
+    'mysql://', 'mysql2://', 'mysql-connector://',
+    'sqlite://', 'mssql://', 'oracle://', 'redshift://',
+)
+if _db_url and any(_db_url.startswith(s) for s in _known_schemes):
+    DATABASES = {
+        'default': dj_database_url.parse(_db_url, conn_max_age=600)
+    }
+else:
+    # Fallback to SQLite if DATABASE_URL is missing/malformed (e.g., '://')
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
