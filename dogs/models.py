@@ -90,19 +90,55 @@ class Dog(models.Model):
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        
-        # Resize main image
+
+        # Normalize and resize uploaded images so browsers can render them reliably
         if self.image:
-            self._resize_image(self.image.path)
+            self._normalize_and_resize_field('image')
+        if self.image2:
+            self._normalize_and_resize_field('image2')
+        if self.image3:
+            self._normalize_and_resize_field('image3')
+        if self.image4:
+            self._normalize_and_resize_field('image4')
     
-    def _resize_image(self, image_path, max_size=(800, 600)):
-        """Resize image to optimize storage and loading times"""
+    def _normalize_and_resize_field(self, field_name: str, max_size=(1200, 900)) -> None:
+        """Ensure uploaded image is browser-friendly (convert to JPEG) and resized."""
         try:
-            with Image.open(image_path) as img:
+            field = getattr(self, field_name)
+            if not field or not field.name:
+                return
+            path = field.path
+            with Image.open(path) as img:
+                # Convert to RGB for JPEG and handle images with alpha
+                if img.mode in ('RGBA', 'LA'):
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    background.paste(img, mask=img.split()[-1])
+                    img = background
+                elif img.mode != 'RGB':
+                    img = img.convert('RGB')
+
+                # Resize
                 img.thumbnail(max_size, Image.Resampling.LANCZOS)
-                img.save(image_path, optimize=True, quality=85)
+
+                # If file is not .jpg/.jpeg, rewrite to .jpg and update field
+                root, ext = os.path.splitext(path)
+                if ext.lower() not in ['.jpg', '.jpeg']:
+                    new_path = root + '.jpg'
+                    img.save(new_path, format='JPEG', optimize=True, quality=85)
+                    try:
+                        os.remove(path)
+                    except Exception:
+                        pass
+                    # Update field to point to new path relative to MEDIA_ROOT
+                    from django.conf import settings
+                    rel = os.path.relpath(new_path, str(settings.MEDIA_ROOT))
+                    field.name = rel.replace('\\', '/')
+                    super().save(update_fields=[field_name])
+                else:
+                    img.save(path, format='JPEG', optimize=True, quality=85)
         except Exception:
-            pass  # Handle gracefully if image processing fails
+            # Best-effort; do not break saving if processing fails
+            pass
 
 
 class Favorite(models.Model):

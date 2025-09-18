@@ -230,22 +230,33 @@
                             Dog Photo
                         </h3>
                         
-                        <div>
-                            <label for="id_image" class="block text-sm font-medium text-gray-700 mb-2">
-                                Upload Photo *
-                            </label>
-                            {{ form.image }}
-                            <div class="mt-2 text-sm text-gray-500">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                Upload a clear, high-quality photo of your dog. This will be the main image for your listing.
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="id_image" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Upload Photo
+                                </label>
+                                {{ form.image }}
+                                {% if form.image.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.image.errors %}
+                                            <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
-                            {% if form.image.errors %}
-                                <div class="mt-1 text-sm text-red-600">
-                                    {% for error in form.image.errors %}
-                                        <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
-                                    {% endfor %}
+                            <div>
+                                <label for="id_image_url" class="block text-sm font-medium text-gray-700 mb-2">
+                                    or Image URL
+                                </label>
+                                {{ form.image_url }}
+                                <div class="mt-2 text-sm text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Paste a direct image link (jpg/png/webp). If provided, it will be used when no upload is chosen.
                                 </div>
-                            {% endif %}
+                                {% if form.non_field_errors %}
+                                    <div class="mt-1 text-sm text-red-600">{{ form.non_field_errors }}</div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     

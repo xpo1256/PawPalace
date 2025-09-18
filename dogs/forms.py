@@ -6,6 +6,12 @@ from .models import Report
 class DogForm(forms.ModelForm):
     """Form for adding/editing dogs"""
     
+    # Allow sellers to provide an image URL as an alternative to upload
+    image_url = forms.URLField(required=False, widget=forms.URLInput(attrs={
+        'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+        'placeholder': 'https://example.com/dog.jpg'
+    }))
+
     class Meta:
         model = Dog
         fields = [
@@ -103,6 +109,15 @@ class DogForm(forms.ModelForm):
             'image4': 'Additional Photo 3',
         }
     
+    def clean(self):
+        cleaned = super().clean()
+        image = cleaned.get('image')
+        image_url = cleaned.get('image_url')
+        # Require at least one of upload or URL
+        if not image and not image_url:
+            raise forms.ValidationError('Please upload a photo or provide an Image URL.')
+        return cleaned
+
     def clean_age(self):
         age = self.cleaned_data.get('age')
         if age and age < 1:

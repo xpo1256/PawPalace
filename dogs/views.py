@@ -11,6 +11,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.paginator import Paginator
+from django.core.files.base import ContentFile
+import requests
 from .models import Dog, Favorite, Order
 from .forms import DogForm, OrderForm, SavedSearchForm, ReportForm
 from .models import Report
@@ -216,6 +218,16 @@ class DogCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.seller = self.request.user
         messages.success(self.request, 'Dog added successfully!')
+        # If seller provided an image URL and no upload, fetch it
+        image_url = form.cleaned_data.get('image_url')
+        if image_url and not form.cleaned_data.get('image'):
+            try:
+                resp = requests.get(image_url, timeout=15)
+                resp.raise_for_status()
+                filename = 'uploaded_url.jpg'
+                form.instance.image.save(filename, ContentFile(resp.content), save=False)
+            except Exception:
+                messages.warning(self.request, 'Could not download the image from the provided URL. Please upload a file instead if the image does not appear.')
         return super().form_valid(form)
 
 
