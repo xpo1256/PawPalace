@@ -157,20 +157,35 @@ class Command(BaseCommand):
                 quantity=10,
             )
 
-            # Try to fetch image
-            try:
-                resp = requests.get(data['image_url'] + '?auto=format&fit=crop&w=1200&q=80', timeout=15)
-                resp.raise_for_status()
-                file_name = f"{data['name'].lower().replace(' ', '_')}.jpg"
-                accessory.image.save(file_name, ContentFile(resp.content), save=False)
-            except Exception:
-                # Use a local placeholder file if remote fetch fails
-                placeholder_path = Path(settings.MEDIA_ROOT) / 'accessories' / 'placeholder.jpg'
+            # Prefer local media first
+            local_media_dir = Path(settings.MEDIA_ROOT) / 'accessories'
+            local_candidates = [
+                f"{data['name'].lower().replace(' ', '_')}.jpg",
+                f"{data['name'].lower().replace(' ', '')}.jpg",
+            ]
+            used_local = False
+            for fname in local_candidates:
+                fpath = local_media_dir / fname
+                if fpath.exists() and fpath.stat().st_size > 0:
+                    with open(fpath, 'rb') as fh:
+                        accessory.image.save(fname, ContentFile(fh.read()), save=False)
+                    used_local = True
+                    break
+            if not used_local:
+                # Try to fetch image
                 try:
-                    with open(placeholder_path, 'rb') as ph:
-                        accessory.image.save('placeholder.jpg', ContentFile(ph.read()), save=False)
+                    resp = requests.get(data['image_url'] + '?auto=format&fit=crop&w=1200&q=80', timeout=15)
+                    resp.raise_for_status()
+                    file_name = f"{data['name'].lower().replace(' ', '_')}.jpg"
+                    accessory.image.save(file_name, ContentFile(resp.content), save=False)
                 except Exception:
-                    accessory.image.save('placeholder.jpg', ContentFile(b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02L\x01\x00;'), save=False)
+                    # Use a local placeholder file if remote fetch fails
+                    placeholder_path = Path(settings.MEDIA_ROOT) / 'accessories' / 'placeholder.jpg'
+                    try:
+                        with open(placeholder_path, 'rb') as ph:
+                            accessory.image.save('placeholder.jpg', ContentFile(ph.read()), save=False)
+                    except Exception:
+                        accessory.image.save('placeholder.jpg', ContentFile(b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02L\x01\x00;'), save=False)
 
             accessory.save()
             created_count += 1
