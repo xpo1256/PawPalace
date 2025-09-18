@@ -157,7 +157,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files (User uploaded files)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Allow overriding media root via environment (useful on Render when attaching a Disk)
+_media_root_env = os.environ.get('MEDIA_ROOT')
+MEDIA_ROOT = Path(_media_root_env) if _media_root_env else (BASE_DIR / 'media')
 
 # Authentication
 AUTH_USER_MODEL = 'accounts.User'

@@ -35,7 +35,5 @@ urlpatterns = [
     path('terms/', TemplateView.as_view(template_name='terms.html'), name='terms'),
 ]
 
-# Serve media files during development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+# Serve media files (needed on Render without a dedicated media server)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
