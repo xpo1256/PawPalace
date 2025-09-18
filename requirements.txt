@@ -4,6 +4,7 @@ charset-normalizer==3.4.3
 dj-database-url==3.0.1
 Django==4.2.24
 gunicorn==21.2.0
+uvicorn==0.30.6
 idna==3.10
 packaging==25.0
 pillow==11.3.0
