@@ -1,0 +1,23 @@
+databases:
+  - name: pawpalacedb
+    plan: free
+    databaseName: pawpalace
+    user: pawpalace
+
+services:
+  - type: web
+    plan: free
+    name: pawpalace
+    runtime: python
+    buildCommand: './build.sh'
+    startCommand: 'python -m gunicorn dog_marketplace.dog_marketplace.asgi:application -k uvicorn.workers.UvicornWorker'
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pawpalacedb
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+
